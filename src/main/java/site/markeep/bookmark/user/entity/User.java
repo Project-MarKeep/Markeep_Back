@@ -5,6 +5,11 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
+import site.markeep.bookmark.follow.entity.Follower;
+import site.markeep.bookmark.follow.entity.Following;
+import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
+import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -39,26 +44,31 @@ public class User  {
 
     private String profileImage;
 
-    @Column(nullable = false)
-    private int signUpId;
-
-    private String accessToken;
-
+    @Column(unique = true)
     private String refreshToken;
 
     @Column(nullable = false)
     @ColumnDefault("false")
     private boolean autoLogin;
 
+    @Column(nullable = false, unique = true)
     private String nickName;
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Folder> folders = new ArrayList<>();
 
-    public void setAccessToken(String accessToken){
-        this.accessToken = accessToken;
-    }
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Follower> followers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Following> followings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Pin> pins = new ArrayList<>();
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;

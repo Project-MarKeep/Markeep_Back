@@ -49,6 +49,11 @@ dependencies {
 
 	// 파일 업로드 라이브러리
 	implementation 'commons-io:commons-io:2.8.0'
+
+	// 이메일로 인증번호 보내기
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+
 }
 
 tasks.named('bootBuildImage') {
