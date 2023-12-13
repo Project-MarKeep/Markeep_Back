@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
+import site.markeep.bookmark.folder.entity.Folder;
+import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
@@ -22,6 +24,8 @@ import site.markeep.bookmark.user.repository.UserRepository;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    private final FolderRepository folderRepository;
 
     private final UserRefreshTokenRepository userRefreshTokenRepository;
 
@@ -89,7 +93,13 @@ public class UserService {
         String encodedPassword = encoder.encode(dto.getPassword());
         dto.setPassword(encodedPassword);
 
-        userRepository.save(dto.toEntity(dto));
+        User saved = userRepository.save(dto.toEntity(dto));
+        folderRepository.save(
+                Folder.builder()
+                        .creator(saved.getId())
+                        .user(saved)
+                        .title("기본 폴더")
+                        .build());
     }
 
     public boolean isDuplicate(String email) {

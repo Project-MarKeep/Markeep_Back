@@ -32,12 +32,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 먼저 헤더에서 토큰에서 타입이 붙은 풀 토큰값을 꺼내준다
         try {
+
             String token = parseBearToken(request);
+            log.warn("토큰 서명이 어쨓는데! 비상! 비상! 해피해킹! 비상뵤!"+ token);
 
             if(token != null){
 
                 // 순수 토큰에서 필요한 유저 정보를 TokenUserInfo 객체에 담아준다.
                 TokenUserInfo userInfo = tokenProvider.validateAndGetTokenUserInfo(token);
+                log.warn("토큰 서명이 어쨓는데22222! 비상! 비상! 해피해킹! 비상뵤!"+ userInfo);
 
                 // 인증 처리
                 // 여기가 스프링의 시큐리티컨테이너에 전달해서 전역적으로 인증 정보 활용하게

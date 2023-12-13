@@ -1,4 +1,4 @@
-package site.markeep.bookmark.folder.dto;
+package site.markeep.bookmark.folder.dto.response;
 
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;

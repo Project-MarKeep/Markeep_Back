@@ -1,4 +1,4 @@
-package site.markeep.bookmark.folder.dto;
+package site.markeep.bookmark.folder.dto.request;
 
 import lombok.*;
 import site.markeep.bookmark.folder.entity.Folder;

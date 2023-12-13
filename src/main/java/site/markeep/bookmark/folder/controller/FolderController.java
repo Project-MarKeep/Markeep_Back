@@ -9,25 +9,28 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.TokenUserInfo;
-import site.markeep.bookmark.folder.dto.AddFloderResponseDTO;
-import site.markeep.bookmark.folder.dto.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
+
+import java.util.List;
 
 
 @RestController
-@RequestMapping("/folders")
 @Slf4j
 @RequiredArgsConstructor
 @CrossOrigin
+@RequestMapping("/folders")
 public class FolderController {
 
     private final FolderService folderService;
 
 
     @GetMapping("/my")
-    public ResponseEntity<?> getFolderList(){
-
-        return null;
+    public ResponseEntity<?> getFolderList(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        log.info("/folders/my - GET 요청! {},", userInfo);
+        List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
+        return ResponseEntity.ok().body(folderList);
     }
 
     //폴더 추가 요청
@@ -52,8 +55,6 @@ public class FolderController {
                     .body("");
         }
         try {
-//            folderService.addFolder(dto,userInfo.getId());
-//            AddFloderResponseDTO addFloderResponseDTO = folderService.addFolder(dto, 1L);//test 를 위해 임시
 
             String uploadedFilePath = null;
             if(folderImg != null) {
@@ -61,8 +62,7 @@ public class FolderController {
                 // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.
                 uploadedFilePath = folderService.uploadProfileImage(folderImg);
             }
-
-            folderService.addFolder(dto, 1L, uploadedFilePath );//test 를 위해 임시
+            folderService.addFolder(dto,userInfo.getId(), uploadedFilePath );
             return ResponseEntity.ok().body("정상 등록 되었습니다.");
         } catch (Exception e) {
             e.printStackTrace();

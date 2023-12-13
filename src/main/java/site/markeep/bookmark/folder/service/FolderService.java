@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import site.markeep.bookmark.folder.dto.AddFloderResponseDTO;
-import site.markeep.bookmark.folder.dto.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.tag.entity.Tag;
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -84,5 +85,25 @@ public class FolderService {
         folderImg.transferTo(uploadFile);
 
         return uniqueFileName;
+    }
+
+    public List<FolderResponseDTO> retrieve(Long userId) {
+        User user = getUser(userId);
+        List<Folder> folderList = user.getFolders();
+        log.warn("user - {}",user);
+//        List<Folder> folderList = folderRepository.findAllByUser(user);
+
+
+        List<FolderResponseDTO> dtoList = folderList.stream()
+                .map(folder -> new FolderResponseDTO(folder))
+                .collect(Collectors.toList());
+
+        return dtoList;
+    }
+
+    private User getUser(Long userId) {
+        return userRepository.findById(userId).orElseThrow(
+                () -> new RuntimeException("회원정보가 없습니다.")
+        );
     }
 }

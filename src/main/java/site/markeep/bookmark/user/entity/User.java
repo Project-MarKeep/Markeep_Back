@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@ToString @EqualsAndHashCode(of = "id")
+@ToString(exclude = "folders") @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
