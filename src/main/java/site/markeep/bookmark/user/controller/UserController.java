@@ -79,11 +79,6 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
-    @PostMapping("/user/new-token")
-    public ResponseEntity<?> newToken(String accessToken){
-        return null;
-    }
-
     //password 재 설정시 인증번호 전송
     @PutMapping
     public ResponseEntity<?> passwordAuth(String email) {

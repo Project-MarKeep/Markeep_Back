@@ -1,6 +1,9 @@
 package site.markeep.bookmark.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -38,9 +42,6 @@ public class TokenProvider {
 
     private UserRefreshTokenRepository userRefreshTokenRepository;
 
-    public TokenProvider() {
-    }
-
     // 여기가 토큰을 진짜로 만드는 메서드
     // 유저가 회원가입 후, 로그인 할 때 토큰을 제공 할 것임
 
@@ -56,6 +57,7 @@ public class TokenProvider {
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
         Map<String, String> claims = new HashMap<>();
         claims.put("email", userEntity.getEmail());
+        claims.put("nickname", userEntity.getNickname());
 
         // 토큰 생성 동시에 리턴
         return Jwts.builder()
@@ -81,7 +83,7 @@ public class TokenProvider {
         Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.DAYS));
 
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
-        Map<String, String> claims = new HashMap<>();
+//        Map<String, String> claims = new HashMap<>();
 
         // 토큰 생성 동시에 리턴
         return Jwts.builder()
@@ -94,11 +96,6 @@ public class TokenProvider {
                 .setExpiration(expiry)
                 .compact();
     };
-
-//    public String recreateAccessToken(String oldAccessToken){
-//
-//        decodeJw
-//    }
 
 
     /**
@@ -121,7 +118,8 @@ public class TokenProvider {
         log.info("claim: {}",claims);
 
         return  TokenUserInfo.builder()
-                .id(claims.getSubject())
+                .id(Long.valueOf(claims.getSubject()))
+                .nickname(claims.get("nickname", String.class))
                 .email(claims.get("email", String.class))
                 .build();
     }
