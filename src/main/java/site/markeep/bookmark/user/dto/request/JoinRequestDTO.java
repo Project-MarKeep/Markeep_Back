@@ -31,7 +31,7 @@ public class JoinRequestDTO {
     public User toEntity(JoinRequestDTO dto) {
         return User.builder()
                 .email(this.getEmail())
-                .nickName(this.getNickname())
+                .nickname(this.getNickname())
                 .password(dto.getPassword())
                 .build();
 

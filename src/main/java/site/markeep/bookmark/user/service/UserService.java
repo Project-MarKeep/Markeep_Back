@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
@@ -31,12 +30,8 @@ public class UserService {
     private final BCryptPasswordEncoder encoder;
 
     public LoginResponseDTO login(LoginRequestDTO dto) throws Exception {
-        
-        log.info("로그인 서비스로 넘어옴");
 
-        // 이거는 id값으로 가져온 user 만들라고 시도 했던 로직
-//        User user = userRepository.findById(dto.getId())
-//                .filter(res -> encoder.matches())
+        log.info("로그인 서비스로 넘어옴");
 
         // 1. dto에서 이메일 값을 뽑아서 가입 여부 확인
         User user = userRepository
@@ -55,7 +50,7 @@ public class UserService {
         }
 
         log.info("서비스 - dto에서 암호화 된 비번 비교 성공");
-        
+
         String accessToken = tokenProvider.createAccessToken(user);
         log.info("액세스 토큰 : {}", accessToken);
         log.info("액세스 토큰 생성 됌");
@@ -71,7 +66,7 @@ public class UserService {
         userRepository.save(User.builder()
                         .id(user.getId())
                         .password(encodedPassword)
-                        .nickName(user.getNickName())
+                        .nickname(user.getNickname())
                         .email(dto.getEmail())
                         .joinDate(user.getJoinDate())
                         .autoLogin(dto.isAutoLogin())
@@ -82,7 +77,7 @@ public class UserService {
         return LoginResponseDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .nickname(user.getNickName())
+                .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .autoLogin(dto.isAutoLogin())
