@@ -8,8 +8,6 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.follow.entity.Follower;
 import site.markeep.bookmark.follow.entity.Following;
 import site.markeep.bookmark.pinn.entity.Pin;
-import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
-import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -52,7 +50,7 @@ public class User  {
     private boolean autoLogin;
 
     @Column(nullable = false, unique = true)
-    private String nickName;
+    private String nickname;
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
