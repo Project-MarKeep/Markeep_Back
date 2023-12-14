@@ -13,8 +13,8 @@ import org.springframework.web.filter.CorsFilter;
 import site.markeep.bookmark.filter.JwtAuthFilter;
 
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
