@@ -45,11 +45,6 @@ public class WebSecurityConfig {
                 CorsFilter.class
         );
 
-        http.addFilterAfter(
-                jwtAuthFilter,
-                CorsFilter.class // import 주의: 스프링 꺼로
-        );
-
         return http.build();
 
     }

@@ -3,18 +3,12 @@ package site.markeep.bookmark.folder.entity;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.user.entity.User;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.List;
 
 @Getter
