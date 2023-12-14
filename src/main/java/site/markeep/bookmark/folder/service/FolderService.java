@@ -52,4 +52,13 @@ public class FolderService {
                             folderRepository.save(folder);
         });
     }
+
+    public void delete(Long folderId) {
+        try {
+            folderRepository.deleteById(folderId);
+        } catch (Exception e) {
+            log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
+        }
+    }
 }

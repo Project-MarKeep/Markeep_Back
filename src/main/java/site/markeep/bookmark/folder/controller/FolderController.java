@@ -22,14 +22,14 @@ public class FolderController {
     private final FolderService folderService;
 
     @GetMapping("/my")
-    public ResponseEntity<?> getFolderList(@AuthenticationPrincipal TokenUserInfo userInfo) {
+    public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
         List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
     }
 
     @PatchMapping("/my")
-    public ResponseEntity<?> updateFolder(
+    public ResponseEntity<?> update(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
@@ -37,6 +37,12 @@ public class FolderController {
         dto.setUserId(userInfo.getId());
         folderService.update(dto);
 
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/my/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Long folderId){
+        folderService.delete(folderId);
         return ResponseEntity.ok().build();
     }
 }
