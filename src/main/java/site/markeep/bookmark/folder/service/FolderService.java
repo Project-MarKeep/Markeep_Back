@@ -2,16 +2,17 @@ package site.markeep.bookmark.folder.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
-import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.tag.repository.TagRepository;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,13 +22,12 @@ public class FolderService {
 
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
+    private final TagRepository tagRepository;
 
     public List<FolderResponseDTO> retrieve(Long userId) {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
-//        List<Folder> folderList = folderRepository.findAllByUser(user);
-
 
         List<FolderResponseDTO> dtoList = folderList.stream()
                 .map(folder -> new FolderResponseDTO(folder))
@@ -40,5 +40,16 @@ public class FolderService {
         return userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("회원정보가 없습니다.")
         );
+    }
+
+    public void update(FolderUpdateRequestDTO dto) {
+        Optional<Folder> foundFolder = folderRepository.findById(dto.getFolderId());
+        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+
+        foundFolder.ifPresent(folder -> {
+                            folder.setUser(user);
+                            folder.update(dto);
+                            folderRepository.save(folder);
+        });
     }
 }

@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 
@@ -17,6 +16,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/folders")
+@CrossOrigin
 public class FolderController {
 
     private final FolderService folderService;
@@ -26,5 +26,17 @@ public class FolderController {
         log.info("/folders/my - GET 요청! {},", userInfo);
         List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
+    }
+
+    @PatchMapping("/my")
+    public ResponseEntity<?> updateFolder(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestBody FolderUpdateRequestDTO dto
+    ){
+        log.info("/folders/my - PATCH 요청! - {}", dto);
+        dto.setUserId(userInfo.getId());
+        folderService.update(dto);
+
+        return ResponseEntity.ok().build();
     }
 }
