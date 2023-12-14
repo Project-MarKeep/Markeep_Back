@@ -8,7 +8,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
+import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
+import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.service.UserService;
 import site.markeep.bookmark.util.MailService;
 
@@ -24,6 +26,8 @@ public class UserController {
     private final UserService userService;
 
     private final MailService mailService;
+
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto){
@@ -96,7 +100,12 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
+    @PatchMapping
+    public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequestDTO dto){
+        userService.updatePassword(dto);
 
+        return ResponseEntity.ok().build();
+    }
 
 
 }
