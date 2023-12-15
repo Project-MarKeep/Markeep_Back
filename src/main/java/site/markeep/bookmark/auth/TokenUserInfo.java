@@ -1,6 +1,7 @@
 package site.markeep.bookmark.auth;
 
 import lombok.*;
+import site.markeep.bookmark.user.entity.Role;
 
 @Getter
 @ToString
@@ -19,6 +20,8 @@ public class TokenUserInfo {
     private String email;
 
     private String password;
+
+    private Role role;
 
     private boolean autoLogin;
 

@@ -30,7 +30,6 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
-
     //폴더 추가 요청
     @PostMapping("/my" )
     public  ResponseEntity<?> addFolder(
