@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@ToString @EqualsAndHashCode(of = "id")
+@ToString(exclude = "folders") @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -35,11 +35,11 @@ public class User  {
     @Column(nullable = false, unique = true)
     private String email;
 
-
     @CreationTimestamp
     @Column(nullable = false, name = "join_date")
     private LocalDateTime joinDate;
 
+    @Column
     private String profileImage;
 
     @Column(unique = true)
@@ -51,6 +51,10 @@ public class User  {
 
     @Column(nullable = false, unique = true)
     private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Role role = Role.USER;
 
     @OneToMany(mappedBy = "user")
     @Builder.Default

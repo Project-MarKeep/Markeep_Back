@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import site.markeep.bookmark.user.entity.Role;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRefreshTokenRepository;
 
@@ -58,6 +59,7 @@ public class TokenProvider {
         Map<String, String> claims = new HashMap<>();
         claims.put("email", userEntity.getEmail());
         claims.put("nickname", userEntity.getNickname());
+        claims.put("role", userEntity.getRole().toString());
 
         // 토큰 생성 동시에 리턴
         return Jwts.builder()
@@ -121,6 +123,7 @@ public class TokenProvider {
                 .id(Long.valueOf(claims.getSubject()))
                 .nickname(claims.get("nickname", String.class))
                 .email(claims.get("email", String.class))
+                .role(Role.valueOf(claims.get("role", String.class)))
                 .build();
     }
 
