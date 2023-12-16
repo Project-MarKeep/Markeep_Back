@@ -11,10 +11,13 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
+import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRefreshTokenRepository;
 import site.markeep.bookmark.user.repository.UserRepository;
+import site.markeep.bookmark.user.repository.UserRepositoryCustom;
+import site.markeep.bookmark.user.repository.UserRepositoryImpl;
 
 
 @Service
@@ -32,6 +35,8 @@ public class UserService {
     private final TokenProvider tokenProvider;
 
     private final BCryptPasswordEncoder encoder;
+
+    private final UserRepositoryImpl repoimpl;
 
     public LoginResponseDTO login(LoginRequestDTO dto) throws Exception {
 
@@ -107,5 +112,8 @@ public class UserService {
     }
 
 
+    public void updatePassword(PasswordUpdateRequestDTO dto) {
+        repoimpl.updatePassword(dto);
+    }
 }
 

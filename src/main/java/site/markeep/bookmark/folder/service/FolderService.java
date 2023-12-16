@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("hasRole('ROLE_USER')")
 public class FolderService {
 
     private final FolderRepository folderRepository;
@@ -115,23 +117,38 @@ public class FolderService {
 //    public List<FolderResponseDTO> getList(PageDTO dto) {
     public FolderListResponseDTO getList(PageDTO dto) {
         //Pageable객체 생성
-        Pageable pageable = PageRequest.of(
-                dto.getPage() - 1,
-                dto.getSize(),
-                Sort.by("createDate").descending()
-        );
-        //데이터 베이스 에서 폴더 목록 조회
-        Page<Folder> folderPage = folderRepository.findAll(pageable);
-        log.info("TOTAL PAGE 정보  getTotalPages !!!" +  folderPage.getTotalPages());
-        log.info("TOTAL FOLDER 정보 getTotalElements !!!" +  folderPage.getTotalElements());
-        //게시물 정보만 조회
-        List<Folder> folderList = folderPage.getContent();
+//        Pageable pageable = PageRequest.of(
+//                dto.getPage() - 1,
+//                dto.getSize(),
+//                Sort.by("pincount").descending()
+//        );
+//        //데이터 베이스 에서 폴더 목록 조회
+//        Page<Folder> folderPage = folderRepository.findAll(pageable);
+//        log.info("TOTAL PAGE 정보  getTotalPages !!!" +  folderPage.getTotalPages());
+//        log.info("TOTAL FOLDER 정보 getTotalElements !!!" +  folderPage.getTotalElements());
+//        //게시물 정보만 조회
+//        List<Folder> folderList = folderPage.getContent();
+
+
+//        for (Folder folder : folderList) {
+//            // 각 Folder에 대한 Tag 목록 추출
+//
+//            // FolderAllResponseDTO 객체 생성 및 리스트에 추가
+//            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder);
+//            responseDTOList.add(responseDTO);
+//        }
+
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountDesc(pageable);
+        List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
+        long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
+        int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
 
         // log.info("폴더 서비스 이건 뭐지 !!!!!!! {}", folderList );
         // FolderAllResponseDTO 리스트 생성
         List<FolderAllResponseDTO> responseDTOList = new ArrayList<>();
 
-        for (Folder folder : folderList) {
+        for (Folder folder : folders) {
             // 각 Folder에 대한 Tag 목록 추출
 //            List<Tag> tags = folder.getTags();
 
@@ -142,7 +159,7 @@ public class FolderService {
         }
 
         return FolderListResponseDTO.builder()
-                .count(folderList.size()) //총 게시물 수가 아니라 조회된 게시물의 개수
+                .count(folders.size()) //총 게시물 수가 아니라 조회된 게시물의 개수
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
                 .folders(responseDTOList)
                 .build();

@@ -32,7 +32,6 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
-
     //폴더 추가 요청
     @PostMapping("/my" )
     public  ResponseEntity<?> addFolder(
@@ -73,8 +72,9 @@ public class FolderController {
 
 
     @GetMapping("/all")
-//    public ResponseEntity<?> getFolderAllList(@Validated @RequestBody PageDTO dto) {
-    public ResponseEntity<?> getFolderAllList(@Validated @RequestBody PageDTO dto,BindingResult result) {
+    public ResponseEntity<?> getFolderAllList(
+//            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @Validated @RequestBody PageDTO dto,BindingResult result) {
         try {
             FolderListResponseDTO list = folderService.getList(dto);
             return ResponseEntity.ok().body(list);
