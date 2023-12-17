@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
+import site.markeep.bookmark.util.dto.page.PageDTO;
 
 import java.util.List;
 
@@ -66,4 +68,23 @@ public class FolderController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
+
+
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getFolderAllList(
+//            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @Validated @RequestBody PageDTO dto,BindingResult result) {
+        try {
+            FolderListResponseDTO list = folderService.getList(dto);
+            return ResponseEntity.ok().body(list);
+        } catch (StackOverflowError e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+
+    }
+
 }
