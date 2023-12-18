@@ -174,6 +174,10 @@ public class UserService {
         // 요청 uri 설정
         String requestUri = "https://nid.naver.com/oauth2.0/token";
 
+        // 요청 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
         // 요청 바디 설정
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
@@ -181,10 +185,11 @@ public class UserService {
         params.add("client_secret", NAVER_CLIENT_SECRET);
         params.add("code", code);
         params.add("state", NAVER_STATE);
+        params.add("service_provider", "NAVER");
 
         RestTemplate template = new RestTemplate();
 
-        ResponseEntity<Map> ResponseEntity = template.exchange(requestUri, HttpMethod.POST, new HttpEntity<>(params), Map.class);
+        ResponseEntity<Map> ResponseEntity = template.exchange(requestUri, HttpMethod.POST, new HttpEntity<>(params, headers), Map.class);
 
         Map<String, Object> responseData =  (Map<String, Object>)ResponseEntity.getBody();
         log.info("토큰 요청 응답 데이터! - {}", responseData);

@@ -16,8 +16,8 @@ import site.markeep.bookmark.util.MailService;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@CrossOrigin
 @RequestMapping("/user")
+@CrossOrigin
 public class UserController {
 
 
