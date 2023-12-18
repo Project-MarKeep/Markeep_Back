@@ -71,7 +71,7 @@ public class UserController {
         }
         log.info("{} 중복?? - {}", email, userService.isDuplicate(email));
         // 400 오류
-        if(!userService.isDuplicate(email)) {
+        if(userService.isDuplicate(email)) {
             return ResponseEntity.badRequest()
                     .body("이미 가입된 이메일 입니다.");
         }
@@ -88,7 +88,7 @@ public class UserController {
                     .body("");
         }
         // 400 오류
-        if(userService.isDuplicate(email)) {
+        if(!userService.isDuplicate(email)) {
             return ResponseEntity.badRequest()
                     .body("미가입 이메일 입니다.");
         }
@@ -96,7 +96,14 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
+    @GetMapping
+    public ResponseEntity<?> naverLogin(String code){
+        log.info("api/auth/naverLogin - GET! -code:{}", code);
+        LoginResponseDTO responseDTO = userService.naverLogin(code);
 
+        return ResponseEntity.ok().body(responseDTO);
+
+    }
 
 
 }
