@@ -96,7 +96,7 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
-    @GetMapping
+    @GetMapping("/naver-login")
     public ResponseEntity<?> naverLogin(String code){
         log.info("api/auth/naverLogin - GET! -code:{}", code);
         LoginResponseDTO responseDTO = userService.naverLogin(code);

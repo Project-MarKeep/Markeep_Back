@@ -44,13 +44,13 @@ public class UserService {
     private final BCryptPasswordEncoder encoder;
 
     @Value("{naver.client_id}")
-    private String CLIENT_ID;
+    private String NAVER_CLIENT_ID;
 
     @Value("{naver.client_secret}")
-    private String CLIENT_SECRET;
+    private String NAVER_CLIENT_SECRET;
 
     @Value("{naver.state")
-    private String state;
+    private String NAVER_STATE;
 
     public LoginResponseDTO login(LoginRequestDTO dto) throws Exception {
 
@@ -177,10 +177,10 @@ public class UserService {
         // 요청 바디 설정
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
-        params.add("client_id", CLIENT_ID);
-        params.add("client_secret", CLIENT_SECRET);
+        params.add("client_id", NAVER_CLIENT_ID);
+        params.add("client_secret", NAVER_CLIENT_SECRET);
         params.add("code", code);
-        params.add("state", state);
+        params.add("state", NAVER_STATE);
 
         RestTemplate template = new RestTemplate();
 
