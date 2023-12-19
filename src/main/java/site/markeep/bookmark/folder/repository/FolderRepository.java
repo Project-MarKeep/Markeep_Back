@@ -5,14 +5,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.user.entity.User;
-
 import java.util.List;
-import java.util.Map;
+
 
 
 public interface FolderRepository extends JpaRepository<Folder, Long> {
