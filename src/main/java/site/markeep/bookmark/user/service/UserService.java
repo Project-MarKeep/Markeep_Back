@@ -43,13 +43,13 @@ public class UserService {
 
     private final BCryptPasswordEncoder encoder;
 
-    @Value("{naver.client_id}")
+    @Value("${naver.client_id}")
     private String NAVER_CLIENT_ID;
 
-    @Value("{naver.client_secret}")
+    @Value("${naver.client_secret}")
     private String NAVER_CLIENT_SECRET;
 
-    @Value("{naver.state")
+    @Value("${naver.state")
     private String NAVER_STATE;
 
     public LoginResponseDTO login(LoginRequestDTO dto) throws Exception {
@@ -103,7 +103,6 @@ public class UserService {
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .autoLogin(dto.isAutoLogin())
                 .build();
     }
 
@@ -144,11 +143,17 @@ public class UserService {
         }
 
         // 이미 가입돼 있는 경우
-        User foundUser = userRepository.findByEmail(userInfo.get("email")).orElseThrow();
+        User foundUser = userRepository.findByEmail(userInfo.get("response/email")).orElseThrow();
 
-        String token = tokenProvider.createAccessToken(foundUser);
+        String accessToken = tokenProvider.createAccessToken(foundUser);
+        String refreshToken = tokenProvider.createRefreshToken();
 
-        return new LoginResponseDTO(foundUser, token);
+        return LoginResponseDTO.builder()
+                .email(foundUser.getEmail())
+                .nickname(foundUser.getNickname())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
 
     }
 

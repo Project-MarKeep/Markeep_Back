@@ -27,9 +27,6 @@ public class LoginResponseDTO {
 
     private String refreshToken;
 
-    private boolean autoLogin;
-
-
     public LoginResponseDTO(User user, String token) {
         this.email = user.getEmail();
         this.nickname = user.getNickname();
