@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,8 +53,6 @@ public class FolderService {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
-//        List<Folder> folderList = folderRepository.findAllByUser(user);
-
 
         List<FolderResponseDTO> dtoList = folderList.stream()
                 .map(folder -> new FolderResponseDTO(folder))
@@ -67,6 +67,25 @@ public class FolderService {
         );
     }
 
+    public void update(FolderUpdateRequestDTO dto) {
+        Optional<Folder> foundFolder = folderRepository.findById(dto.getFolderId());
+        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+
+        foundFolder.ifPresent(folder -> {
+                            folder.setUser(user);
+                            folder.update(dto);
+                            folderRepository.save(folder);
+        });
+    }
+
+    public void delete(Long folderId) {
+        try {
+            folderRepository.deleteById(folderId);
+        } catch (Exception e) {
+            log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
+        }
+    }
 
 
     public void addFolder(final AddFolderRequestDTO dto, final  Long id, final  String uploadedFilePath)  throws Exception  {
@@ -90,7 +109,16 @@ public class FolderService {
             tagList.add(savedTag); //저장된 태그를 리스트에 추가. 혹시 나중에 쓸까 싶어 일단 정보를 담는다
 
         }
+        log.info("service 여기는 들어 왔다???????????????" , tagList.get(0));
 
+//        return AddFloderResponseDTO.builder()
+//                .folderImg(folder.getFolderImg())
+//                .title(folder.getTitle())
+//                .tags(tagList)
+//                .createDate(folder.getCreateDate())
+//                .userId(id)
+//                .hideFlag(folder.isHideFlag())
+//                .build();
     }
 
     public String uploadProfileImage(MultipartFile folderImg) throws IOException {
@@ -111,31 +139,8 @@ public class FolderService {
         return uniqueFileName;
     }
 
-
     //폴더 전체 목록 조회
-//    public List<FolderResponseDTO> getList(PageDTO dto) {
     public FolderListResponseDTO getList(PageDTO dto) {
-        //Pageable객체 생성
-//        Pageable pageable = PageRequest.of(
-//                dto.getPage() - 1,
-//                dto.getSize(),
-//                Sort.by("pincount").descending()
-//        );
-//        //데이터 베이스 에서 폴더 목록 조회
-//        Page<Folder> folderPage = folderRepository.findAll(pageable);
-//        log.info("TOTAL PAGE 정보  getTotalPages !!!" +  folderPage.getTotalPages());
-//        log.info("TOTAL FOLDER 정보 getTotalElements !!!" +  folderPage.getTotalElements());
-//        //게시물 정보만 조회
-//        List<Folder> folderList = folderPage.getContent();
-
-
-//        for (Folder folder : folderList) {
-//            // 각 Folder에 대한 Tag 목록 추출
-//
-//            // FolderAllResponseDTO 객체 생성 및 리스트에 추가
-//            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder);
-//            responseDTOList.add(responseDTO);
-//        }
 
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountDesc(pageable);
