@@ -26,8 +26,4 @@ public class LoginResponseDTO {
 
     private String refreshToken;
 
-    private boolean autoLogin;
-
-
-
 }

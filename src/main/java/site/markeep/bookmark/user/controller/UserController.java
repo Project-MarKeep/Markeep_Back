@@ -1,11 +1,20 @@
 package site.markeep.bookmark.user.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import site.markeep.bookmark.auth.TokenProvider;
+import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
@@ -24,10 +33,9 @@ public class UserController {
 
 
     private final UserService userService;
-
     private final MailService mailService;
-
     private final UserRepository userRepository;
+    private final TokenProvider tokenProvider;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto){
@@ -106,6 +114,14 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleSignIn(@RequestBody GoogleLoginRequestDTO dto) {
+        return ResponseEntity.ok().body(userService.googleLogin(dto));
+    }
+
+
+
 
 
 }

@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('ROLE_USER')")
 public class FolderService {
 
     private final FolderRepository folderRepository;
