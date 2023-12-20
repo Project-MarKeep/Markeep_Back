@@ -56,6 +56,13 @@ public class User  {
     @Builder.Default
     private Role role = Role.USER;
 
+    // provider에는 google이 들어가게 되고,
+    @Column
+    private String provider;
+    // providerId에는 구글로 로그인 한 유저의 고유 ID가 들어가게 된다.
+    @Column
+    private String providerId;
+
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Folder> folders = new ArrayList<>();

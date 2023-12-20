@@ -3,12 +3,17 @@ package site.markeep.bookmark.folder.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
@@ -16,18 +21,22 @@ import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.tag.repository.TagRepository;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRepository;
+import site.markeep.bookmark.util.dto.page.PageDTO;
+import site.markeep.bookmark.util.dto.page.PageResponseDTO;
+
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('ROLE_USER')")
 public class FolderService {
 
     private final FolderRepository folderRepository;
@@ -44,8 +53,6 @@ public class FolderService {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
-//        List<Folder> folderList = folderRepository.findAllByUser(user);
-
 
         List<FolderResponseDTO> dtoList = folderList.stream()
                 .map(folder -> new FolderResponseDTO(folder))
@@ -60,6 +67,25 @@ public class FolderService {
         );
     }
 
+    public void update(FolderUpdateRequestDTO dto) {
+        Optional<Folder> foundFolder = folderRepository.findById(dto.getFolderId());
+        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+
+        foundFolder.ifPresent(folder -> {
+                            folder.setUser(user);
+                            folder.update(dto);
+                            folderRepository.save(folder);
+        });
+    }
+
+    public void delete(Long folderId) {
+        try {
+            folderRepository.deleteById(folderId);
+        } catch (Exception e) {
+            log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
+        }
+    }
 
 
     public void addFolder(final AddFolderRequestDTO dto, final  Long id, final  String uploadedFilePath)  throws Exception  {
@@ -113,4 +139,37 @@ public class FolderService {
         return uniqueFileName;
     }
 
+    //폴더 전체 목록 조회
+    public FolderListResponseDTO getList(PageDTO dto) {
+
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountDesc(pageable);
+        List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
+        long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
+        int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
+
+        // log.info("폴더 서비스 이건 뭐지 !!!!!!! {}", folderList );
+        // FolderAllResponseDTO 리스트 생성
+        List<FolderAllResponseDTO> responseDTOList = new ArrayList<>();
+
+        for (Folder folder : folders) {
+            // 각 Folder에 대한 Tag 목록 추출
+//            List<Tag> tags = folder.getTags();
+
+            // FolderAllResponseDTO 객체 생성 및 리스트에 추가
+//            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder, tags);
+            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder);
+            responseDTOList.add(responseDTO);
+        }
+
+        return FolderListResponseDTO.builder()
+                .count(folders.size()) //총 게시물 수가 아니라 조회된 게시물의 개수
+                .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
+                .folders(responseDTOList)
+                .build();
+
+    }
+
 }
+
+

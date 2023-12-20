@@ -65,9 +65,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             e.printStackTrace();
             log.warn("토큰 서명이 위조되었습니다! 비상! 비상! 해피해킹! 비상뵤!");
         }
-
+        
         filterChain.doFilter(request, response);
-
+        log.info("!!!!!!!!!!!토큰이 필터를 지나감!!!!!!!!!!!");
     }
 
     // 순수 토큰 값에서 토큰 타입 빼주기!

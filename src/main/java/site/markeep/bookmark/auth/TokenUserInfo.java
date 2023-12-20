@@ -3,6 +3,8 @@ package site.markeep.bookmark.auth;
 import lombok.*;
 import site.markeep.bookmark.user.entity.Role;
 
+import java.time.LocalDate;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -24,6 +26,18 @@ public class TokenUserInfo {
     private Role role;
 
     private boolean autoLogin;
+
+    private String token; // 인증 토큰
+
+//    public void LoginResponseDTO(User user, String token) {
+//
+//        this.email = user.getEmail();
+//        this.userName = user.getUserName();
+//        this.joinDate = LocalDate.from(user.getJoinDate());
+//        this.token = token;
+//        this.role = String.valueOf(user.getRole());
+//
+//    }
 
 
 }
