@@ -3,11 +3,10 @@ package site.markeep.bookmark.user.service;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
-import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
@@ -32,11 +30,9 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.repository.UserRepositoryImpl;
 
 import javax.persistence.EntityManager;
-
-import static site.markeep.bookmark.user.entity.QUser.user;
-
 import java.util.Map;
 
+import static site.markeep.bookmark.user.entity.QUser.user;
 
 @Service
 @RequiredArgsConstructor

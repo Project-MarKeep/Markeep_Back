@@ -27,6 +27,7 @@ public class LoginResponseDTO {
 
     private String refreshToken;
 
+    // autoLogin 체크 안한 사람을 위한 생성자
     public LoginResponseDTO(User user, String token) {
         this.email = user.getEmail();
         this.nickname = user.getNickname();

@@ -1,9 +1,6 @@
 package site.markeep.bookmark.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -20,7 +17,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 @Slf4j
@@ -53,7 +49,7 @@ public class TokenProvider {
         // accessToken은 로컬스토리지에 저장해야 한다.
 
         // 1. 토큰 만료 시간 설정하기
-        Date expiry = Date.from(Instant.now().plus(ACCESS_EXPIRY, ChronoUnit.SECONDS));
+        Date expiry = Date.from(Instant.now().plus(ACCESS_EXPIRY, ChronoUnit.MINUTES));
 
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
         Map<String, String> claims = new HashMap<>();
@@ -82,7 +78,7 @@ public class TokenProvider {
         // accessToken은 로컬스토리지에 저장해야 한다.
 
         // 1. 토큰 만료 시간 설정하기
-        Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.MINUTES));
+        Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.HOURS));
 
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
 //        Map<String, String> claims = new HashMap<>();
