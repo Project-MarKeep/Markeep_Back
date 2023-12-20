@@ -53,7 +53,7 @@ public class TokenProvider {
         // accessToken은 로컬스토리지에 저장해야 한다.
 
         // 1. 토큰 만료 시간 설정하기
-        Date expiry = Date.from(Instant.now().plus(ACCESS_EXPIRY, ChronoUnit.MINUTES));
+        Date expiry = Date.from(Instant.now().plus(ACCESS_EXPIRY, ChronoUnit.SECONDS));
 
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
         Map<String, String> claims = new HashMap<>();
@@ -82,7 +82,7 @@ public class TokenProvider {
         // accessToken은 로컬스토리지에 저장해야 한다.
 
         // 1. 토큰 만료 시간 설정하기
-        Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.DAYS));
+        Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.MINUTES));
 
         // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
 //        Map<String, String> claims = new HashMap<>();
@@ -98,7 +98,6 @@ public class TokenProvider {
                 .setExpiration(expiry)
                 .compact();
     };
-
 
     /**
      * 클라이언트가 전송한 토큰을 디코딩하여 토큰의 위조 여부를 확인
