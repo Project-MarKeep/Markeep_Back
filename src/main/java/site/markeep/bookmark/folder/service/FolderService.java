@@ -24,7 +24,6 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
