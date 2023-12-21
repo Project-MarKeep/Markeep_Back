@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
@@ -32,13 +32,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-//@PreAuthorize("hasRole('ROLE_USER')")
 public class FolderService {
 
     private final FolderRepository folderRepository;
@@ -56,8 +56,6 @@ public class FolderService {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
-//        List<Folder> folderList = folderRepository.findAllByUser(user);
-
 
         List<FolderResponseDTO> dtoList = folderList.stream()
                 .map(folder -> new FolderResponseDTO(folder))
@@ -72,16 +70,30 @@ public class FolderService {
         );
     }
 
+    public void update(FolderUpdateRequestDTO dto) {
+        Optional<Folder> foundFolder = folderRepository.findById(dto.getFolderId());
+        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+
+        foundFolder.ifPresent(folder -> {
+                            folder.setUser(user);
+                            folder.update(dto);
+                            folderRepository.save(folder);
+        });
+    }
+
+    public void delete(Long folderId) {
+        try {
+            folderRepository.deleteById(folderId);
+        } catch (Exception e) {
+            log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
+        }
+    }
 
 
     public void addFolder(final AddFolderRequestDTO dto, final  Long id, final  String uploadedFilePath)  throws Exception  {
         // 1. 가입 여부 확인
 
-//        User user = userRepository
-//                .findById(id)
-//                .orElseThrow(
-//                        () -> new RuntimeException("가입된 회원이 아닙니다! 회원 가입을 진행해주세요.")
-//                );
         User user = getUser(id);
 
         Folder folder = folderRepository.save(dto.toEntity(dto,user,uploadedFilePath));//혹시 나중에 쓸까 싶어 일단 정보를 담는다
@@ -153,36 +165,6 @@ public class FolderService {
                 .build();
 
     }
-
-    // 키워드 들로 폴더 정보를 조회한다.
-    // sort 순은 핀많이 받은순 + 등록순
-    // 여기서 query 문을 완성한다
-//    private String makeKeyWords(String keyWord) {
-//        if (keyWord == null || keyWord.isEmpty()) {
-//            return "";// keyWord가 null이거나 비어있으면 빈 문자열 반환
-//        }
-//
-//        // 공백을 기준으로 분리하여 배열로 저장
-//        String[] keyWords = keyWord.split("\\s+");
-//        StringBuilder queryBuilder = new StringBuilder("WHERE ");
-//        List<String> conditions = new ArrayList<>();
-//
-//        for (int i = 0; i < keyWords.length; i++) {
-//            if (keyWords[i] != null && !keyWords[i].isEmpty() ) {
-//                String condition = String.format("LOWER(f.title) LIKE LOWER(CONCAT('%%', :keyWord%d, '%%'))", i);
-//                conditions.add(condition);
-//            }
-//        }
-//
-//        if (!conditions.isEmpty()) {
-//            queryBuilder.append("(");
-//            queryBuilder.append(String.join(" AND ", conditions));
-//            queryBuilder.append(") ");
-//        }
-//
-//        return makeKeyWords(queryBuilder.toString());
-//
-//    }
 
 
     /*****************************************************

@@ -1,11 +1,20 @@
 package site.markeep.bookmark.user.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import site.markeep.bookmark.auth.TokenProvider;
+import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
@@ -18,16 +27,15 @@ import site.markeep.bookmark.util.MailService;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@CrossOrigin
 @RequestMapping("/user")
+@CrossOrigin
 public class UserController {
 
 
     private final UserService userService;
-
     private final MailService mailService;
-
     private final UserRepository userRepository;
+    private final TokenProvider tokenProvider;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto){
@@ -75,7 +83,7 @@ public class UserController {
         }
         log.info("{} 중복?? - {}", email, userService.isDuplicate(email));
         // 400 오류
-        if(!userService.isDuplicate(email)) {
+        if(userService.isDuplicate(email)) {
             return ResponseEntity.badRequest()
                     .body("이미 가입된 이메일 입니다.");
         }
@@ -92,7 +100,7 @@ public class UserController {
                     .body("");
         }
         // 400 오류
-        if(userService.isDuplicate(email)) {
+        if(!userService.isDuplicate(email)) {
             return ResponseEntity.badRequest()
                     .body("미가입 이메일 입니다.");
         }
@@ -106,6 +114,21 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleSignIn(@RequestBody GoogleLoginRequestDTO dto) {
+        return ResponseEntity.ok().body(userService.googleLogin(dto));
+    }
+
+
+    @GetMapping("/naver-login")
+    public ResponseEntity<?> naverLogin(String code){
+        log.info("api/auth/naverLogin - GET! -code:{}", code);
+        LoginResponseDTO responseDTO = userService.naverLogin(code);
+
+        return ResponseEntity.ok().body(responseDTO);
+
+    }    
 
 
 }

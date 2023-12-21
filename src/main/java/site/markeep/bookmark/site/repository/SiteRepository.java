@@ -5,7 +5,6 @@ import site.markeep.bookmark.site.entity.Site;
 
 import java.util.List;
 
-public interface SiteRepository extends JpaRepository<Site,Long> {
-
+public interface SiteRepository extends JpaRepository<Site, Long> {
     List<Site> findByFolderId(Long folderId);
 }
