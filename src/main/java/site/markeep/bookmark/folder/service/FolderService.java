@@ -3,16 +3,11 @@ package site.markeep.bookmark.folder.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
@@ -34,15 +29,10 @@ import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,9 +125,14 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyWord ) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountDesc(pageable);
+//        log.info("getList folder keyWord sql문 !!!!!! : {}",makeKeyWords(keyWord));
+        String[] keyWords = keyWord.split("\\s+");
+//        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, makeKeyWords(keyWord));
+        log.info("getList folder keyWord sql문 keyWord !!!!!! : {}",keyWord);
+        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
+
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
         long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
         int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
@@ -158,6 +153,37 @@ public class FolderService {
                 .build();
 
     }
+
+    // 키워드 들로 폴더 정보를 조회한다.
+    // sort 순은 핀많이 받은순 + 등록순
+    // 여기서 query 문을 완성한다
+//    private String makeKeyWords(String keyWord) {
+//        if (keyWord == null || keyWord.isEmpty()) {
+//            return "";// keyWord가 null이거나 비어있으면 빈 문자열 반환
+//        }
+//
+//        // 공백을 기준으로 분리하여 배열로 저장
+//        String[] keyWords = keyWord.split("\\s+");
+//        StringBuilder queryBuilder = new StringBuilder("WHERE ");
+//        List<String> conditions = new ArrayList<>();
+//
+//        for (int i = 0; i < keyWords.length; i++) {
+//            if (keyWords[i] != null && !keyWords[i].isEmpty() ) {
+//                String condition = String.format("LOWER(f.title) LIKE LOWER(CONCAT('%%', :keyWord%d, '%%'))", i);
+//                conditions.add(condition);
+//            }
+//        }
+//
+//        if (!conditions.isEmpty()) {
+//            queryBuilder.append("(");
+//            queryBuilder.append(String.join(" AND ", conditions));
+//            queryBuilder.append(") ");
+//        }
+//
+//        return makeKeyWords(queryBuilder.toString());
+//
+//    }
+
 
     /*****************************************************
      . 커뮤니티 화면에서 폴더의 pin hover 누르면, 해당 폴더가 마이페이지에 생긴다.

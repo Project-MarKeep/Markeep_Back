@@ -79,10 +79,14 @@ public class FolderController {
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
 //            @AuthenticationPrincipal TokenUserInfo userInfo,
-             PageDTO dto) {
+             PageDTO dto,
+             String keyWord ) {
+
+         // 키워드에 spaces 가 있으면 쪼갠다
+
 
         try {
-            FolderListResponseDTO list = folderService.getList(dto);
+            FolderListResponseDTO list = folderService.getList(dto,keyWord);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());

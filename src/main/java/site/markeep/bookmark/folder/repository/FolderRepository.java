@@ -11,7 +11,7 @@ import java.util.List;
 
 
 
-public interface FolderRepository extends JpaRepository<Folder, Long> {
+public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRepositoryCustom {
 
     // 특정 회원의 폴더 목록 요청
     @Query("SELECT f FROM Folder f WHERE f.user = :user ")
@@ -20,9 +20,16 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     @Query("SELECT count(p) as pincount FROM Pin p WHERE p.folder.id = :folderId")
     int countPinsByFolderId(@Param("folderId") Long folderId);
 
-    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
-    Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
+    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
 
+//    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p " +
+//            "WHERE (:keywords IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keywords[%d], '%'))) " +
+//            "GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
+//        Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, @Param("keyWords") String[] keyWords);
+//    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, @Param("keyWords") String keyWords);
+
+//    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
+//    Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
 
 
 
