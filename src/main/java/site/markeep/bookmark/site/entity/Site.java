@@ -1,5 +1,6 @@
 package site.markeep.bookmark.site.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.entity.Folder;
@@ -36,6 +37,7 @@ public class Site {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
+    @JsonBackReference
     private Folder folder;
 }
 

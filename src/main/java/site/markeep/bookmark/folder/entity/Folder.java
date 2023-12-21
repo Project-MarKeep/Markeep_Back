@@ -6,6 +6,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.user.entity.User;
 
@@ -15,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@ToString(exclude = "tags")
-@ToString(exclude = "user")
+@ToString(exclude = {"tags", "user", "sites"})
 @EqualsAndHashCode
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -57,6 +57,9 @@ public class Folder {
     @Builder.Default
     private List<Pin> pins = new ArrayList<>();
 
+    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @Builder.Default
+    private List<Site> sites = new ArrayList<>();
 
     public  void  addTag(Tag tag) {
         this.tags.add(tag);//매개값으로 전달받은  Tag객체를 리스트에 추가
