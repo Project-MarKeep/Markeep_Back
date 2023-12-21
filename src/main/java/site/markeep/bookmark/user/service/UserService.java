@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +16,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
-import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
@@ -25,6 +23,7 @@ import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
+import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
 import site.markeep.bookmark.user.entity.Role;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRefreshTokenRepository;
@@ -37,7 +36,7 @@ import java.util.Map;
 
 import static site.markeep.bookmark.user.entity.QUser.user;
 
-import java.util.Map;
+import java.util.Optional;
 
 
 @Service
@@ -305,6 +304,23 @@ public class UserService {
                         .build();
 
             }
+        }
+    }
+
+    //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해 온다
+    public ProfileResponseDTO getProfile(Long id) {
+
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            return ProfileResponseDTO.builder()
+                    .profileImage(user.get().getProfileImage())
+                    .nickname(user.get().getNickname())
+                    .email(user.get().getEmail())
+                    .followerCount(user.get().getFollowers().size())
+                    .followingCount(user.get().getFollowings().size())
+                    .build();
+        } else {
+            throw new RuntimeException("User not found with id: " + id);
         }
     }
 }

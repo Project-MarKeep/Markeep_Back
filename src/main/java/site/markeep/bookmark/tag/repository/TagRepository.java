@@ -6,6 +6,6 @@ import site.markeep.bookmark.tag.entity.Tag;
 import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag,Long> {
-    Optional<Tag> findById(Long id);
+//    Optional<Tag> findById(Long id);
 
 }
