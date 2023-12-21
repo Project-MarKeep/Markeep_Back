@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.user.entity.User;
@@ -13,9 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-//@ToString(exclude = "user")
-//@ToString(exclude = "tags")
+@Getter @Setter
 @ToString(exclude = "user")
 @EqualsAndHashCode
 @NoArgsConstructor @AllArgsConstructor
@@ -67,5 +66,12 @@ public class Folder {
         if (this != tag.getFolder()) {
             tag.setFolder(this);
         }
+    }
+    
+    public void update(FolderUpdateRequestDTO dto){
+        this.creator = dto.getUserId();
+        this.title = dto.getTitle();
+        this.tags = dto.getTags();
+        this.hideFlag = dto.isHideFlag();
     }
 }

@@ -10,35 +10,56 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/folders")
+@CrossOrigin
 public class FolderController {
 
     private final FolderService folderService;
 
     @GetMapping("/my")
-    public ResponseEntity<?> getFolderList(@AuthenticationPrincipal TokenUserInfo userInfo) {
+    public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
         List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
     }
 
+    
+    @PatchMapping("/my")
+    public ResponseEntity<?> update(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestBody FolderUpdateRequestDTO dto
+    ){
+        log.info("/folders/my - PATCH 요청! - {}", dto);
+        dto.setUserId(userInfo.getId());
+        folderService.update(dto);
+
+        return ResponseEntity.ok().build();
+    }
+
+    //폴더 삭제 요청
+    @DeleteMapping("/my/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Long folderId) {
+        folderService.delete(folderId);
+        return ResponseEntity.ok().build();
+    }
+    
     /*****************************************************
       .폴더 추가 요청
       .생성 ENTITY : Folder , Tag , Folder image
       .return : 정상 등록 유무 message
     *****************************************************/
-    @PostMapping("/my" )
+    @PostMapping("/my")
     public  ResponseEntity<?> addFolder(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @Validated @RequestPart AddFolderRequestDTO dto,
@@ -79,10 +100,14 @@ public class FolderController {
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
 //            @AuthenticationPrincipal TokenUserInfo userInfo,
-             PageDTO dto) {
+             PageDTO dto,
+             String keyWord ) {
+
+         // 키워드에 spaces 가 있으면 쪼갠다
+
 
         try {
-            FolderListResponseDTO list = folderService.getList(dto);
+            FolderListResponseDTO list = folderService.getList(dto,keyWord);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());
