@@ -1,4 +1,4 @@
-package site.markeep.bookmark.site.dto;
+package site.markeep.bookmark.site.dto.request;
 
 import lombok.*;
 
@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AddSiteRequestDTO {
-
+    private Long folderId;
     private String siteName;
     private String url;
     private String comment;

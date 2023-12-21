@@ -6,6 +6,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.user.entity.User;
 
@@ -55,6 +56,10 @@ public class Folder {
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
     @Builder.Default
     private List<Pin> pins = new ArrayList<>();
+
+    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @Builder.Default
+    private List<Site> sites = new ArrayList<>();
 
 
     public  void  addTag(Tag tag) {
