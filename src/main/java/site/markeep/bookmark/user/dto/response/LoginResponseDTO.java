@@ -2,12 +2,7 @@ package site.markeep.bookmark.user.dto.response;
 
 
 import lombok.*;
-import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.user.entity.User;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @ToString
@@ -22,6 +17,8 @@ public class LoginResponseDTO {
     private String email;
 
     private String nickname;
+
+    private boolean autoLogin;
 
     private String accessToken;
 

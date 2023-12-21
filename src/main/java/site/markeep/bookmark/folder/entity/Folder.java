@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@ToString(exclude = {"tags", "user", "sites"})
+@ToString(exclude = {"user", "sites"})
 @EqualsAndHashCode
 @NoArgsConstructor @AllArgsConstructor
 @Builder
