@@ -114,6 +114,7 @@ public class TokenProvider {
         // Claims라는 객체 타입으로 반환 한다.
         log.info("claim: {}",claims);
 
+
         return  TokenUserInfo.builder()
                 .id(Long.valueOf(claims.getSubject()))
                 .nickname(claims.get("nickname", String.class))

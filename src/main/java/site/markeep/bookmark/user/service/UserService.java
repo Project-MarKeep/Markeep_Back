@@ -89,9 +89,11 @@ public class UserService {
 
         log.info("서비스 - dto에서 암호화 된 비번 비교 성공");
 
+        // 로그인 성공한 유저에게 제공할 액세스 토큰 생성
         String accessToken = tokenProvider.createAccessToken(user);
-        log.info("액세스 토큰 : {}", accessToken);
         log.info("액세스 토큰 생성 됨");
+        log.info("액세스 토큰 : {}", accessToken);
+        // 자동로그인 체크 + 로그인 성공한 유저에게 제공할 리프레시 토큰 생성
         String refreshToken = tokenProvider.createRefreshToken();
         log.info("리프레시 토큰 : {}", refreshToken);
         log.info("리프레시 토큰 생성 됨");
@@ -116,6 +118,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
+                .autoLogin(dto.isAutoLogin())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -142,7 +145,6 @@ public class UserService {
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
-
     public LoginResponseDTO naverLogin(final String code) {
         Map<String, Object> responseData = getNaverAccessToken(code);
         log.info("token: {}", responseData.get("access_token"));
@@ -167,8 +169,10 @@ public class UserService {
         String refreshToken = tokenProvider.createRefreshToken();
 
         return LoginResponseDTO.builder()
+                .id(foundUser.getId())
                 .email(foundUser.getEmail())
                 .nickname(foundUser.getNickname())
+                .autoLogin(foundUser.isAutoLogin())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -250,6 +254,7 @@ public class UserService {
                         .refreshToken(refreshToken)
                         .build());
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
                         .email(googoleUserEmail)
                         .nickname(googleUserNickname)
                         .accessToken(accessToken)
@@ -265,6 +270,7 @@ public class UserService {
                         .autoLogin(dto.isAutoLogin())
                         .build());
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
                         .email(googoleUserEmail)
                         .nickname(googleUserNickname)
                         .accessToken(accessToken)
@@ -282,6 +288,9 @@ public class UserService {
                 em.flush();
                 em.clear();
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
+                        .email(googoleUserEmail)
+                        .nickname(googleUserNickname)
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
                         .build();
@@ -295,6 +304,9 @@ public class UserService {
                 em.flush();
                 em.clear();
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
+                        .email(googoleUserEmail)
+                        .nickname(googleUserNickname)
                         .accessToken(accessToken)
                         .build();
 

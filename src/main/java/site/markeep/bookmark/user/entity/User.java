@@ -8,6 +8,7 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.follow.entity.Follower;
 import site.markeep.bookmark.follow.entity.Following;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.site.entity.Site;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -56,16 +57,20 @@ public class User  {
     @Builder.Default
     private Role role = Role.USER;
 
-    // provider에는 google이 들어가게 되고,
-    @Column
-    private String provider;
-    // providerId에는 구글로 로그인 한 유저의 고유 ID가 들어가게 된다.
-    @Column
-    private String providerId;
+//    // provider에는 google이 들어가게 되고,
+//    @Column
+//    private String provider;
+//    // providerId에는 구글로 로그인 한 유저의 고유 ID가 들어가게 된다.
+//    @Column
+//    private String providerId;
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Folder> folders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Site> sites = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
