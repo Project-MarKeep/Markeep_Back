@@ -26,8 +26,16 @@ public class LoginResponseDTO {
 
     // autoLogin 체크 안한 사람을 위한 생성자
     public LoginResponseDTO(User user, String token) {
+        this.id = user.getId();
         this.email = user.getEmail();
         this.nickname = user.getNickname();
         this.accessToken = token;
+    }
+    public LoginResponseDTO(User user, String accessToken, String refreshToken) {
+        this.id = user.getId();
+        this.email = user.getEmail();
+        this.nickname = user.getNickname();
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 }

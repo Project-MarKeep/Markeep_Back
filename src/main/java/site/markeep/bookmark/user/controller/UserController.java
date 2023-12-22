@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.user.dto.SnsLoginDTO;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
@@ -74,7 +75,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/check")
+    @GetMapping("/join")
     public ResponseEntity<?> check(String email) {
         //이메일을 입력하지 않은 경우 빈 문자열 반환-400 오류
         if(email.trim().isEmpty()) {
@@ -92,7 +93,7 @@ public class UserController {
     }
 
     //password 재 설정시 인증번호 전송
-    @PutMapping
+    @PutMapping("/password")
     public ResponseEntity<?> passwordAuth(String email) {
 
         if(email.trim().isEmpty()) {
@@ -108,7 +109,7 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
-    @PatchMapping
+    @PatchMapping("/password")
     public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequestDTO dto){
         userService.updatePassword(dto);
 
@@ -122,12 +123,20 @@ public class UserController {
 
 
     @GetMapping("/naver-login")
-    public ResponseEntity<?> naverLogin(String code){
-        log.info("api/auth/naverLogin - GET! -code:{}", code);
-        LoginResponseDTO responseDTO = userService.naverLogin(code);
+    public ResponseEntity<?> naverLogin(@RequestBody SnsLoginDTO dto){
+        log.info("user/naver-login - GET! -code:{}", dto);
+        LoginResponseDTO responseDTO = userService.naverLogin(dto);
 
         return ResponseEntity.ok().body(responseDTO);
 
+    }
+
+    @GetMapping("kakao-login")
+    public ResponseEntity<?> kakaoLogin(@RequestBody SnsLoginDTO dto) {
+        log.info("user/kakao-login - GET! -code:{}", dto);
+        LoginResponseDTO responseDTO = userService.kakaoService(dto);
+
+        return ResponseEntity.ok().body(responseDTO);
     }
 
 

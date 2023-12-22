@@ -5,8 +5,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.follow.entity.Follower;
-import site.markeep.bookmark.follow.entity.Following;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.site.entity.Site;
 
@@ -72,13 +70,9 @@ public class User  {
     @Builder.Default
     private List<Site> sites = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Follower> followers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Following> followings = new ArrayList<>();
+//    @OneToMany(mappedBy = "user")
+//    @Builder.Default
+//    private List<Follow> followers = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
