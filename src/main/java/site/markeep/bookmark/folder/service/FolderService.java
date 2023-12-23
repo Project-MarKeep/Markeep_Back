@@ -1,5 +1,6 @@
 package site.markeep.bookmark.folder.service;
 
+import com.sun.jdi.InternalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -7,7 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
@@ -29,6 +33,7 @@ import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +51,7 @@ public class FolderService {
     private final TagRepository tagRepository;
     private final SiteRepository siteRepository;
     private final PinRepository pinRepository;
+
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
@@ -139,23 +145,25 @@ public class FolderService {
     //폴더 전체 목록 조회
     public FolderListResponseDTO getList(PageDTO dto , String keyWord ) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-//        log.info("getList folder keyWord sql문 !!!!!! : {}",makeKeyWords(keyWord));
         String[] keyWords = keyWord.split("\\s+");
-//        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, makeKeyWords(keyWord));
-        log.info("getList folder keyWord sql문 keyWord !!!!!! : {}",keyWord);
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
-
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
         long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
         int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
 
-        // log.info("폴더 서비스 이건 뭐지 !!!!!!! {}", folderList );
         // FolderAllResponseDTO 리스트 생성
         List<FolderAllResponseDTO> responseDTOList = new ArrayList<>();
         for (Folder folder : folders) {
             // 각 Folder에 대한 Tag 목록 추출
-            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder);
-            responseDTOList.add(responseDTO);
+
+            FolderAllResponseDTO folderAllResponseDTO = new FolderAllResponseDTO();
+            // 폴더 이미지 얻어오기 및 folder 내용 밀어 넣기
+            folderAllResponseDTO.setFolder(folder);
+            folderAllResponseDTO.setUserId(folderRepository.getFolderUser(folder.getId()));
+
+            loadFile(folderAllResponseDTO ,folder.getFolderImg());
+
+            responseDTOList.add(folderAllResponseDTO);
         }
 
         return FolderListResponseDTO.builder()
@@ -165,6 +173,70 @@ public class FolderService {
                 .build();
 
     }
+
+    private FolderAllResponseDTO loadFile(FolderAllResponseDTO folderAllResponseDTO ,String folderImg) {
+
+        if(folderImg == null ) return folderAllResponseDTO;
+
+        try {
+
+            String filePath
+                    = uploadRootPath + "/" + folderImg;
+            // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
+            File folderfileFile = new File(filePath);
+
+            // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사가 없는 사람들은 경로가 존재하지 않을 것이다.
+            // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
+            if(!folderfileFile.exists()) {
+
+                throw new FileNotFoundException("등록된 이지미가 없습니다.");
+            }
+
+            // 해당 경로에 저장된 파일을 바이트 배열로 직렬화 해서 리턴.
+            byte[] fileData = FileCopyUtils.copyToByteArray(folderfileFile);
+
+            // 3. 응답 헤더에 컨텐츠 타입을 설정.
+            HttpHeaders headers = new HttpHeaders();
+            MediaType contentType = findExtensionAndGetMediaType(filePath);
+            if(contentType == null) {
+                throw new InternalException("발견된 파일은 이미지 파일이 아닙니다.");
+            }
+
+            headers.setContentType(contentType);
+            folderAllResponseDTO.setHeaders(headers);
+            folderAllResponseDTO.setFileData(fileData);
+
+            return  folderAllResponseDTO;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("파일을 찾을 수 없습니다.");
+        }
+    }
+
+    private MediaType findExtensionAndGetMediaType(String filePath) {
+
+        // 파일 경로에서 확장자 추출하기
+        // C:/todo_upload/nsadjknjkncjndnjs_abc.jpg
+        String ext
+                = filePath.substring(filePath.lastIndexOf(".") + 1);
+
+        // 추출한 확장자를 바탕으로 MediaType을 설정. -> Header에 들어갈 Content-type이 됨.
+        switch (ext.toUpperCase()) {
+            case "JPG": case "JPEG":
+                return MediaType.IMAGE_JPEG;
+            case "PNG":
+                return MediaType.IMAGE_PNG;
+            case "GIF":
+                return MediaType.IMAGE_GIF;
+            default:
+                return null;
+        }
+    }
+
+
+
+
 
 
     /*****************************************************
@@ -181,14 +253,18 @@ public class FolderService {
                 );
 
         User user = getUser(userId);
-
         //Folder , Site , Pin 생성
         AddFolderRequestDTO dto =  AddFolderRequestDTO.builder()
                 .title(folder.getTitle())
                 .build();
+        
 
         //폴더 생성전에 이미지를 먼저 새로운 이름으로 복사 , 생성한다.
-        String newFolderName = imageCopy(folder.getFolderImg());
+        String newFolderName = null;
+        if(folder.getFolderImg() != null) {
+            newFolderName = imageCopy(folder.getFolderImg());
+        }  
+        
         //폴더 생성
         //고려사항 발생, 폴더 이미지도 같이 복사,생성하는데 이지미id 를 새로 생성해서 저장하는 작업을 따로 해야함(db 생성)
 
@@ -197,7 +273,8 @@ public class FolderService {
         Folder folderNew = folderRepository.save(dto.toEntity(dto,user,newFolderName));//혹시 나중에 쓸까 싶어 일단 정보를 담는다
 
         //핀 생성
-        pinRepository.save(Pin.builder().folder(folder).user(user).build());
+//        pinRepository.save(Pin.builder().folder(folder).user(user).build());
+        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);

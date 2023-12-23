@@ -22,6 +22,9 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
 
     Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
 
+    @Query(value = "SELECT user_id FROM Folder WHERE folder_id = :folderId", nativeQuery = true)
+    Long getFolderUser(@Param("folderId") Long folderId);
+
 //    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p " +
 //            "WHERE (:keywords IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keywords[%d], '%'))) " +
 //            "GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
