@@ -5,6 +5,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
+import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.site.entity.Site;
 
 import javax.persistence.*;
@@ -65,11 +66,6 @@ public class User  {
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Folder> folders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Site> sites = new ArrayList<>();
-
 
 //    @OneToMany(mappedBy = "user")
 //    @Builder.Default

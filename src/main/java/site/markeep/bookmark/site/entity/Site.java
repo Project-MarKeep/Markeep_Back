@@ -41,9 +41,4 @@ public class Site {
     @JsonBackReference
     private Folder folder;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    @JsonBackReference
-    private User user;
-
 }

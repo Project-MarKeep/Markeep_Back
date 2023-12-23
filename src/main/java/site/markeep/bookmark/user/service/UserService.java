@@ -115,17 +115,17 @@ public class UserService {
 
         userRefreshTokenRepository.findById(user.getId())
                 .ifPresentOrElse(
-            it -> it.updateRefreshToken(refreshToken),
-            () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
+                        it -> it.updateRefreshToken(refreshToken),
+                        () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
                 );
         userRepository.save(User.builder()
-                        .id(user.getId())
-                        .password(encodedPassword)
-                        .nickname(user.getNickname())
-                        .email(dto.getEmail())
-                        .joinDate(user.getJoinDate())
-                        .autoLogin(dto.isAutoLogin())
-                        .refreshToken(refreshToken)
+                .id(user.getId())
+                .password(encodedPassword)
+                .nickname(user.getNickname())
+                .email(dto.getEmail())
+                .joinDate(user.getJoinDate())
+                .autoLogin(dto.isAutoLogin())
+                .refreshToken(refreshToken)
                 .build());
 
         // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
@@ -147,15 +147,15 @@ public class UserService {
         folderRepository.save(
                 Folder.builder()
 //                    .creator(saved.getId())
-                    .user(saved)
-                    .title("기본 폴더")
-                    .build());
+                        .user(saved)
+                        .title("기본 폴더")
+                        .build());
     }
 
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
-    
+
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
@@ -170,11 +170,11 @@ public class UserService {
         // 중복되지 않았을 경우
         if(!isDuplicate(userInfo.get("response/email"))){
             userRepository.save(User.builder()
-                            .email(userInfo.get("response/email"))
-                            .password("password!")
-                            .nickname(userInfo.get("response/nickname"))
-                            .build()
-                    );
+                    .email(userInfo.get("response/email"))
+                    .password("password!")
+                    .nickname(userInfo.get("response/nickname"))
+                    .build()
+            );
         }
 
         // 이미 가입돼 있는 경우

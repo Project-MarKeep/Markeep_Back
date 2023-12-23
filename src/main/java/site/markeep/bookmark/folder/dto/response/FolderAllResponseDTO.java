@@ -26,16 +26,13 @@ public class FolderAllResponseDTO {
     private Long userId;
     private HttpHeaders headers;
     private byte[] fileData;
-//    private List<Tag> tags = new ArrayList<>();
 
 
-//    public FolderAllResponseDTO(Folder folder,List<Tag> tag) {
     public FolderAllResponseDTO(Folder folder , Long userId , HttpHeaders headers , byte[] fileData ) {
         this.folder = folder;
         this.userId = userId;
         this.headers = headers;
         this.fileData = fileData;
     }
-
 
 }
