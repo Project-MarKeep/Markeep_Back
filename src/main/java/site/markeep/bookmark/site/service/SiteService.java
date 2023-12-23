@@ -9,8 +9,8 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.site.dto.request.AddSiteRequestDTO;
 import site.markeep.bookmark.site.dto.request.SingleSiteInfoRequestDTO;
+import site.markeep.bookmark.site.dto.request.SiteDeleteRequestDTO;
 import site.markeep.bookmark.site.dto.request.UpdateSiteInfoRequestDTO;
-import site.markeep.bookmark.site.entity.QSite;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
 import site.markeep.bookmark.user.repository.UserRepository;
@@ -38,11 +38,11 @@ public class SiteService {
         );
 
         siteRepository.save(Site.builder()
-                        .siteName(dto.getSiteName())
-                        .url(dto.getUrl())
-                        .comment(dto.getComment())
-                        .folder(foundFolder)
-                        .build());
+                .siteName(dto.getSiteName())
+                .url(dto.getUrl())
+                .comment(dto.getComment())
+                .folder(foundFolder)
+                .build());
         return siteRepository.findAll();
     }
 
@@ -55,30 +55,23 @@ public class SiteService {
                 ).getSites();
         log.warn("=================사이트 리스트 : {}", siteList);
         return siteList;
-//        return siteRepository.findAllById()
+    }
 
-//        List<Site> siteList = folderRepository.findById(folderId).orElseThrow(
-//                () -> new RuntimeException("폴더 안에 등록 된 사이트가 없습니다!")
-//        );
-//        List<Site> siteList = queryFactory.select(site)
-//                .where(folder.id.eq(folderId))
-//                .orderBy(site.regdate.desc())
-//                .fetch();
-//        JPAQuery<Site> siteList = query.select(site)
-//                .from(site)
-//                .join(site.folder, folder)
-//                .where(folder.id.eq(folderId))
-//                .orderBy(site.regdate.desc());
-//        return (List<Site>) siteList;
-//        NumberPath<Long> foundId = QFolder.folder.id;
-//        log.warn("=================foundId: {}", foundId);
-//
-//        List<Site> siteList = queryFactory.selectFrom(site)
-//                .where(foundId.eq(folderId))
-//                .orderBy(site.regdate.desc())
-//                .fetch();
-//        return siteList;
-//        return siteRepository.findAllById(folderId);
+
+    public void deleteSite(Long userId, SiteDeleteRequestDTO dto) {
+        folderRepository.findById(dto.getFolderId()).orElseThrow(
+                () -> new RuntimeException("없는 폴더입니다. 폴더 번호 확인해주세요!")
+        );
+        if(userId == null ) {
+            throw new RuntimeException("회원 가입 확인해 주세요 ");
+        }
+
+        try {
+            siteRepository.deleteById(dto.getSiteId());
+        } catch (Exception e) {
+            throw new RuntimeException("site id가 존재하지 않아 site 삭제에 실패했습니다.");
+        }
+
     }
 
     public void updateRegistSiteInfo(UpdateSiteInfoRequestDTO dto) {

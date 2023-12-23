@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@ToString
+@ToString(exclude = "user")
 @EqualsAndHashCode
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -39,14 +39,12 @@ public class Folder {
     @ColumnDefault("false")
     private boolean hideFlag;
 
-    // 이게 커뮤에 creator = user.user_id 라면 중복 폴더로 취급해서 안띄울라고 넣은 컬럼인데
-    // 커뮤에 닉네임을 같이 띄우기로 하면서 잠깐 보류됌.
-//    @Column(nullable = false)
-//    private Long creator;
+    @Column(nullable = false)
+    private Long creator;
 
     private String folderImg;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;
@@ -75,7 +73,6 @@ public class Folder {
     }
     
     public void update(FolderUpdateRequestDTO dto){
-//        this.creator = dto.getUserId();
         this.title = dto.getTitle();
         this.tags = dto.getTags();
         this.hideFlag = dto.isHideFlag();
