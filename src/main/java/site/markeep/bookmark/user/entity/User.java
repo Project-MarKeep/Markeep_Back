@@ -5,8 +5,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.pinn.entity.Pin;
-import site.markeep.bookmark.site.entity.Site;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -14,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@ToString(exclude = "folders") @EqualsAndHashCode(of = "id")
+@ToString
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -65,18 +64,6 @@ public class User  {
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Folder> folders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Site> sites = new ArrayList<>();
-
-//    @OneToMany(mappedBy = "user")
-//    @Builder.Default
-//    private List<Follow> followers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Pin> pins = new ArrayList<>();
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;

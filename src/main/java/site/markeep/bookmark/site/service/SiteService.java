@@ -8,13 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.site.dto.request.AddSiteRequestDTO;
+import site.markeep.bookmark.site.dto.request.SiteDeleteRequestDTO;
 import site.markeep.bookmark.site.dto.request.UpdateSiteInfoRequestDTO;
-import site.markeep.bookmark.site.entity.QSite;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
 import site.markeep.bookmark.user.repository.UserRepository;
 
 import java.util.List;
+
+import static site.markeep.bookmark.site.entity.QSite.site;
 
 
 @Service
@@ -44,7 +46,7 @@ public class SiteService {
         return siteRepository.findAll();
     }
 
-    // folderId값 가지고 있는 사이트들 다 불러오기
+    // folderId로 사이트 목록 조회
     public List<Site> getSiteList(Long folderId) {
 
         List<Site> siteList = folderRepository.findById(folderId)
@@ -83,32 +85,49 @@ public class SiteService {
 //        log.warn("[SERVICE] updateRegistSiteInfo에 들어온건 맞니ㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ");
 //        log.warn("아니면 dto에서 값 꺼내는건 괜찮나? -> {}",dto.getUserId());
         // 기존의 정보를 입력 되어 있게 해주기 위해서 기존 정보 선언
-        Site site = siteRepository.findById(dto.getSiteId()).orElseThrow();
+        Site foundSite = siteRepository.findById(dto.getSiteId()).orElseThrow();
 //        log.warn("siteName 오나 보자 : {}", site.getSiteName());
 //        log.warn("comment 오나 보자 : {}", site.getComment());
 
         // udpate시켜주기
         if(dto.getComment() == null) {
-            long updateSiteNameOnly = queryFactory.update(QSite.site)
-                    .set(QSite.site.siteName, dto.getSiteName())
-                    .set(QSite.site.comment, site.getComment())
-                    .where(QSite.site.id.eq(dto.getSiteId()))
+            long updateSiteNameOnly = queryFactory.update(site)
+                    .set(site.siteName, dto.getSiteName())
+                    .set(site.comment, foundSite.getComment())
+                    .where(site.id.eq(dto.getSiteId()))
                     .execute();
             log.warn("사이트 이름만 수정한거 : {}", updateSiteNameOnly);
         } else if(dto.getSiteName() == null){
-            long execute = queryFactory.update(QSite.site)
-                    .set(QSite.site.siteName, site.getSiteName())
-                    .set(QSite.site.comment, dto.getComment())
-                    .where(QSite.site.id.eq(dto.getSiteId()))
+            long execute = queryFactory.update(site)
+                    .set(site.siteName, foundSite.getSiteName())
+                    .set(site.comment, dto.getComment())
+                    .where(site.id.eq(dto.getSiteId()))
                     .execute();
             log.warn("사이트 등록할 때, 코멘트 수정 내용 : {}", execute);
         } else if(dto.getSiteName() != null && dto.getComment() != null){
-            long execute = queryFactory.update(QSite.site)
-                    .set(QSite.site.siteName, dto.getSiteName())
-                    .set(QSite.site.comment, dto.getComment())
-                    .where(QSite.site.id.eq(dto.getSiteId()))
+            long execute = queryFactory.update(site)
+                    .set(site.siteName, dto.getSiteName())
+                    .set(site.comment, dto.getComment())
+                    .where(site.id.eq(dto.getSiteId()))
                     .execute();
             log.warn("둘 다 수정 : {}", execute);
         }
+    }
+
+
+    public void deleteSite(Long userId, SiteDeleteRequestDTO dto) {
+        folderRepository.findById(dto.getFolderId()).orElseThrow(
+                () -> new RuntimeException("없는 폴더입니다. 폴더 번호 확인해주세요!")
+        );
+        if(userId == null ) {
+            throw new RuntimeException("회원 가입 확인해 주세요 ");
+        }
+
+        try {
+            siteRepository.deleteById(dto.getSiteId());
+        } catch (Exception e) {
+            throw new RuntimeException("site id가 존재하지 않아 site 삭제에 실패했습니다.");
+        }
+
     }
 }

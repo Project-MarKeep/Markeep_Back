@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
+import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
 import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.service.UserService;
 import site.markeep.bookmark.util.MailService;
@@ -137,6 +139,17 @@ public class UserController {
         LoginResponseDTO responseDTO = userService.kakaoService(dto);
 
         return ResponseEntity.ok().body(responseDTO);
+    }
+    //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해오는 요청
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal TokenUserInfo userInfo){
+
+        try {
+            ProfileResponseDTO profile = userService.getProfile(userInfo.getId());
+            return ResponseEntity.ok().body(profile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 

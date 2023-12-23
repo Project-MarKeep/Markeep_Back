@@ -8,13 +8,13 @@ import javax.persistence.Table;
 
 @Getter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 
 @Entity
-@Table
+@Table(name = "follow")
 public class Follow {
 
     @EmbeddedId

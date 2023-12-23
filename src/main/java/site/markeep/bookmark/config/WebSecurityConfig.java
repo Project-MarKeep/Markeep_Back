@@ -2,7 +2,6 @@ package site.markeep.bookmark.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -36,12 +35,10 @@ public class WebSecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests() // 요청 선언해서 인증/인가 검사 할건지 안할건지
-                .antMatchers(HttpMethod.GET, "/folders/my").authenticated()
-                .antMatchers("/site/**").authenticated()
-
-                .antMatchers("/user/**").permitAll();
-                // 세션을 사용하지 않겠다! 설정
-                // 사용하지 않으니 스프링 시큐리티가 세션을 사용하지 않고 존재해도 사용하지 않겠다고 설정!
+                    .antMatchers("/folders/my","/folders/pin","/site","/user/profile").authenticated()
+                    .antMatchers("/user/**").permitAll();
+        // 세션을 사용하지 않겠다! 설정
+        // 사용하지 않으니 스프링 시큐리티가 세션을 사용하지 않고 존재해도 사용하지 않겠다고 설정!
 
         http.addFilterAfter(
                 jwtAuthFilter,
@@ -49,7 +46,6 @@ public class WebSecurityConfig {
         );
 
         return http.build();
-
     }
 
 }

@@ -1,16 +1,15 @@
 package site.markeep.bookmark.user.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sun.jdi.InternalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -18,6 +17,7 @@ import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.user.dto.KakaoUserDTO;
 import site.markeep.bookmark.user.dto.SnsLoginDTO;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
@@ -25,6 +25,7 @@ import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
+import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
 import site.markeep.bookmark.user.entity.Role;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRefreshTokenRepository;
@@ -32,9 +33,14 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.repository.UserRepositoryImpl;
 
 import javax.persistence.EntityManager;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 import static site.markeep.bookmark.user.entity.QUser.user;
+
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +56,12 @@ public class UserService {
     private final UserRepositoryImpl repoimpl;
     private final JPAQueryFactory queryFactory;
     private final EntityManager em;
+    private final FollowRepository followRepository;
+
+
+    @Value("${upload.path.profile}")
+    private String uploadProfilePath;
+
 
     @Value("${kakao.client_id}")
     private String KAKAO_CLIENT_ID;
@@ -143,7 +155,7 @@ public class UserService {
         User saved = userRepository.save(dto.toEntity(dto));
         folderRepository.save(
                 Folder.builder()
-                    .creator(saved.getId())
+//                    .creator(saved.getId())
                     .user(saved)
                     .title("기본 폴더")
                     .build());
@@ -382,8 +394,81 @@ public class UserService {
         Map<String, Object> responseData = (Map<String, Object>) responseEntity.getBody();
 
         return responseData;
+    }
 
+    //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해 온다
+    public ProfileResponseDTO getProfile(Long id) {
 
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            ProfileResponseDTO profileResponseDTO = new ProfileResponseDTO();
+            profileResponseDTO.setNickname(user.get().getNickname());
+            profileResponseDTO.setEmail(user.get().getEmail());
+            profileResponseDTO.setFollowerCount(followRepository.countByid_ToId(user.get().getId()));
+            profileResponseDTO.setFollowingCount(followRepository.countByid_FromId(user.get().getId()));
+            loadFile(profileResponseDTO , user.get().getProfileImage());
+
+            return profileResponseDTO;
+        } else {
+            throw new RuntimeException("User not found with id: " + id);
+        }
+    }
+
+    //프로필 사진을 얻어오자
+    private ProfileResponseDTO loadFile(ProfileResponseDTO  profileResponseDTO , String profileImg) {
+        if(profileImg == null ) return profileResponseDTO;
+        try {
+            String filePath
+                    = uploadProfilePath + "/" + profileImg;
+            // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
+            File folderfileFile = new File(filePath);
+
+            // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사가 없는 사람들은 경로가 존재하지 않을 것이다.
+            // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
+            if(!folderfileFile.exists()) {
+                throw new FileNotFoundException("등록된 이지미가 없습니다.");
+            }
+
+            // 해당 경로에 저장된 파일을 바이트 배열로 직렬화 해서 리턴.
+            byte[] fileData = FileCopyUtils.copyToByteArray(folderfileFile);
+
+            // 3. 응답 헤더에 컨텐츠 타입을 설정.
+            HttpHeaders headers = new HttpHeaders();
+            MediaType contentType = findExtensionAndGetMediaType(filePath);
+            if(contentType == null) {
+                throw new InternalException("발견된 파일은 이미지 파일이 아닙니다.");
+            }
+
+            headers.setContentType(contentType);
+            profileResponseDTO.setHeaders(headers);
+            profileResponseDTO.setFileData(fileData);
+
+            return  profileResponseDTO;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("파일을 찾을 수 없습니다.");
+        }
+    }
+
+    private MediaType findExtensionAndGetMediaType(String filePath) {
+
+        // 파일 경로에서 확장자 추출하기
+        // C:/todo_upload/nsadjknjkncjndnjs_abc.jpg
+        String ext
+                = filePath.substring(filePath.lastIndexOf(".") + 1);
+
+        // 추출한 확장자를 바탕으로 MediaType을 설정. -> Header에 들어갈 Content-type이 됨.
+        switch (ext.toUpperCase()) {
+            case "JPG": case "JPEG":
+                return MediaType.IMAGE_JPEG;
+            case "PNG":
+                return MediaType.IMAGE_PNG;
+            case "GIF":
+                return MediaType.IMAGE_GIF;
+            default:
+                return null;
+        }
     }
 }
 

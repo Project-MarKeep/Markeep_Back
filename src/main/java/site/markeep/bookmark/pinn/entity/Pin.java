@@ -30,10 +30,15 @@ public class Pin {
     @JsonBackReference
     private Folder folder;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name = "new_folder_id")
     @JsonBackReference
-    private User user;
+    private Folder newFolder;
+
+//    @ManyToOne
+//    @JoinColumn(name = "user_id")
+//    @JsonBackReference
+//    private User user;
 
 
 }

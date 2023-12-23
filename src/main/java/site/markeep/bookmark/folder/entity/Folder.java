@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@ToString(exclude = {"tags", "user"})
+@ToString(exclude = "user")
 @EqualsAndHashCode
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -39,12 +39,9 @@ public class Folder {
     @ColumnDefault("false")
     private boolean hideFlag;
 
-    @Column(nullable = false)
-    private Long creator;
-
     private String folderImg;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
@@ -73,7 +70,6 @@ public class Folder {
     }
     
     public void update(FolderUpdateRequestDTO dto){
-        this.creator = dto.getUserId();
         this.title = dto.getTitle();
         this.tags = dto.getTags();
         this.hideFlag = dto.isHideFlag();
