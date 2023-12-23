@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.pinn.entity.Pin;
@@ -26,6 +27,9 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
     @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
     Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
+
+    @Query(value = "SELECT user_id FROM Folder WHERE folder_id = ?1", nativeQuery = true)
+    Long getAllFolderInfo(Long folderId);
 
 
 

@@ -13,6 +13,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 
@@ -26,6 +27,7 @@ import java.util.List;
 public class FolderController {
 
     private final FolderService folderService;
+    private final FolderRepository folderRepository;
 
     // 마이페이지 입장 시, 기본폴더부터 모든 폴더 불러와주는 메서드
     @GetMapping("/my")
@@ -94,11 +96,15 @@ public class FolderController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
-            @Validated @RequestBody PageDTO dto,
-            BindingResult result) {
+            PageDTO dto
+//            BindingResult result
+    ) {
         try {
             FolderListResponseDTO list = folderService.getList(dto);
-            return ResponseEntity.ok().body(list);
+            log.warn("getList의 결과 : {}", list);
+//            return ResponseEntity.ok().body(list);
+            log.warn("쿼리 메서드 결과 봐볼개~ :{}", folderRepository.getAllFolderInfo(1L));
+            return null;
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {

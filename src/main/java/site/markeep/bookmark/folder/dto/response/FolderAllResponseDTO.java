@@ -19,14 +19,10 @@ import java.util.List;
 @Builder
 public class FolderAllResponseDTO {
 
-    private  Folder folder;
-//    private List<Tag> tags = new ArrayList<>();
+    private Folder folder;
 
-
-//    public FolderAllResponseDTO(Folder folder,List<Tag> tag) {
     public FolderAllResponseDTO(Folder folder) {
         this.folder = folder;
-//        this.tags = tag;
     }
 
 

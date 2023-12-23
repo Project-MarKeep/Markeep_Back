@@ -6,15 +6,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
-import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.UserInFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.tag.entity.Tag;
@@ -24,14 +23,12 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -150,22 +147,33 @@ public class FolderService {
 
         // log.info("폴더 서비스 이건 뭐지 !!!!!!! {}", folderList );
         // FolderAllResponseDTO 리스트 생성
-        List<FolderAllResponseDTO> responseDTOList = new ArrayList<>();
+        List<FolderAllResponseDTO> folderResponseDTOList = new ArrayList<>();
+        List<UserInFolderResponseDTO> userResponseDTOList = new ArrayList<>();
 
+        User user = new User();
+        Long id = user.getId();
+
+        // 폴더 안의 폴더의 주인인 User정보를 담아보자
         for (Folder folder : folders) {
             // 각 Folder에 대한 Tag 목록 추출
-//            List<Tag> tags = folder.getTags();
 
             // FolderAllResponseDTO 객체 생성 및 리스트에 추가
-//            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder, tags);
-            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO(folder);
-            responseDTOList.add(responseDTO);
+            FolderAllResponseDTO responseDTO = new FolderAllResponseDTO();
+            folderResponseDTOList.add(responseDTO);
+            Long foldersUserId = folder.getUser().getId();
+            // folderId = user.folder.id
+            if(folder.getUser().getId() == id){
+//                UserInFolderResponseDTO userDto = new UserInFolderResponseDTO(여기에 무슨 User의 정보를 넣어놔야햊대체);
+//                userResponseDTOList.add(userDto);
+            }
+
         }
 
         return FolderListResponseDTO.builder()
                 .count(folders.size()) //총 게시물 수가 아니라 조회된 게시물의 개수
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
-                .folders(responseDTOList)
+                .folders(folderResponseDTOList)
+                .users(userResponseDTOList)
                 .build();
 
     }

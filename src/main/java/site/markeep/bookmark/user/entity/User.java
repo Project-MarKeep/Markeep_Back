@@ -1,12 +1,11 @@
 package site.markeep.bookmark.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.follow.entity.Follower;
-import site.markeep.bookmark.follow.entity.Following;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.site.entity.Site;
 
@@ -16,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@ToString(exclude = "folders") @EqualsAndHashCode(of = "id")
+@ToString
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -66,19 +66,12 @@ public class User  {
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
+    @JsonManagedReference
     private List<Folder> folders = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Site> sites = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Follower> followers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    @Builder.Default
-    private List<Following> followings = new ArrayList<>();
+//    @OneToMany(mappedBy = "user")
+//    @Builder.Default
+//    private List<Follow> follows = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
