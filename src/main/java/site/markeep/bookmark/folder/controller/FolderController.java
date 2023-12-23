@@ -107,11 +107,15 @@ public class FolderController {
 
 
         try {
+            log.info("dddddddddddddddddddddddd");
             FolderListResponseDTO list = folderService.getList(dto,keyWord);
+            log.info("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
+            log.info("bbbbbbbbbbbbbbbbbbbbbb");
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
+            log.info("ccccccccccccccccccccccccccc");
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
