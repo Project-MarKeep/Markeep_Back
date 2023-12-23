@@ -15,6 +15,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
+import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
@@ -54,6 +55,7 @@ public class UserService {
     private final TokenProvider tokenProvider;
     private final BCryptPasswordEncoder encoder;
     private final UserRepositoryImpl repoimpl;
+
     private final JPAQueryFactory queryFactory;
     private final EntityManager em;
     private final FollowRepository followRepository;
@@ -155,7 +157,6 @@ public class UserService {
         User saved = userRepository.save(dto.toEntity(dto));
         folderRepository.save(
                 Folder.builder()
-//                    .creator(saved.getId())
                     .user(saved)
                     .title("기본 폴더")
                     .build());
@@ -164,6 +165,7 @@ public class UserService {
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
+    
     
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
@@ -330,7 +332,6 @@ public class UserService {
                         .nickname(googleUserNickname)
                         .accessToken(accessToken)
                         .build();
-
             }
         }
     }
@@ -394,6 +395,11 @@ public class UserService {
         Map<String, Object> responseData = (Map<String, Object>) responseEntity.getBody();
 
         return responseData;
+    }
+    public boolean switchFollowBtn(TokenUserInfo userInfo) {
+        log.warn("먼저 토큰 안에 id값 있는지부터 보까: {}",userInfo);
+
+        return false;
     }
 
     //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해 온다

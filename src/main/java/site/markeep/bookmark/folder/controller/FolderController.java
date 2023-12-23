@@ -13,6 +13,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 

@@ -1,6 +1,6 @@
 package site.markeep.bookmark.folder.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -43,7 +43,7 @@ public class Folder {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
-    @JsonIgnore
+    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
@@ -63,7 +63,7 @@ public class Folder {
 
         //매개값으로 전달된 Tag객체가 가지고 있는 Folder가
         //이 메서드를 부를는 Folder객체와 주소값이 서로 다르다면 데이터 불일치가 발생하기 때문에
-        //Tagdml Folder 의 값도 이 객체로 변경
+        //Tag의 Folder 의 값도 이 객체로 변경
         if (this != tag.getFolder()) {
             tag.setFolder(this);
         }
