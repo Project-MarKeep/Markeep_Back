@@ -3,6 +3,8 @@ package site.markeep.bookmark.auth;
 import lombok.*;
 import site.markeep.bookmark.user.entity.Role;
 
+import java.time.LocalDate;
+
 @Getter
 @ToString
 @EqualsAndHashCode

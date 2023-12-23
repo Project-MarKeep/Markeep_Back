@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
+import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
 import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.service.UserService;
 import site.markeep.bookmark.util.MailService;
@@ -43,11 +45,9 @@ public class UserController {
         try {
             LoginResponseDTO responseDTO = userService.login(dto);
             return ResponseEntity.ok().body(responseDTO);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e){
             e.printStackTrace();
-            return ResponseEntity.badRequest().body("관리자의 이메일로 문의해주세요!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -66,16 +66,16 @@ public class UserController {
 
         try {
             userService.join(dto);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             log.warn("기타 예외가 발생했습니다.");
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    @GetMapping("/check")
-    public ResponseEntity<?> check(String email) {
+    @GetMapping("/join")
+    public ResponseEntity<?> checkingDuplicateEmailInDBBysendingVerifycationCodeToMail(String email) {
         //이메일을 입력하지 않은 경우 빈 문자열 반환-400 오류
         if(email.trim().isEmpty()) {
             return ResponseEntity.badRequest()
@@ -92,12 +92,11 @@ public class UserController {
     }
 
     //password 재 설정시 인증번호 전송
-    @PutMapping
-    public ResponseEntity<?> passwordAuth(String email) {
+    @PutMapping("/password")
+    public ResponseEntity<?> authorizingByUsersEmailBeforeUpdatePassword(String email) {
 
         if(email.trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         // 400 오류
         if(!userService.isDuplicate(email)) {
@@ -108,26 +107,49 @@ public class UserController {
         return ResponseEntity.ok().body(mailService.sendMail(email));
     }
 
-    @PatchMapping
+    @PatchMapping("/password")
     public ResponseEntity<?> updatePassword(@RequestBody PasswordUpdateRequestDTO dto){
         userService.updatePassword(dto);
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleSignIn(@RequestBody GoogleLoginRequestDTO dto) {
-        return ResponseEntity.ok().body(userService.googleLogin(dto));
+        LoginResponseDTO responseDTO = null;
+        try {
+            responseDTO = userService.googleLogin(dto);
+            return ResponseEntity.ok().body(responseDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
 
     @GetMapping("/naver-login")
     public ResponseEntity<?> naverLogin(String code){
         log.info("api/auth/naverLogin - GET! -code:{}", code);
-        LoginResponseDTO responseDTO = userService.naverLogin(code);
 
-        return ResponseEntity.ok().body(responseDTO);
+        try {
+            LoginResponseDTO responseDTO = userService.naverLogin(code);
+            return ResponseEntity.ok().body(responseDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
 
+
+    //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해오는 요청
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal TokenUserInfo userInfo){
+
+        try {
+            ProfileResponseDTO profile = userService.getProfile(userInfo.getId());
+            return ResponseEntity.ok().body(profile);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 
