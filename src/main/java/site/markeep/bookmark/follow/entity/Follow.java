@@ -20,4 +20,6 @@ public class Follow {
     @EmbeddedId
     private FollowId id; // 복합 키 필드
 
+
+
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.user.entity.User;
+
 import java.util.List;
 
 
@@ -33,7 +34,5 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
 
 //    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
 //    Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
-
-
 
 }
