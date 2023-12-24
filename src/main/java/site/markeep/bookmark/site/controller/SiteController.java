@@ -84,7 +84,6 @@ public class SiteController {
         }
     }
 
-
     // 사이트 삭제
     @DeleteMapping
     public  ResponseEntity<?> deleteSite(
