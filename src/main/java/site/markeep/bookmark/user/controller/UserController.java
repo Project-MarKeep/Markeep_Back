@@ -1,12 +1,7 @@
 package site.markeep.bookmark.user.controller;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -115,9 +110,8 @@ public class UserController {
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleSignIn(@RequestBody GoogleLoginRequestDTO dto) {
-        LoginResponseDTO responseDTO = null;
         try {
-            responseDTO = userService.googleLogin(dto);
+            LoginResponseDTO responseDTO = userService.googleLogin(dto);
             return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,7 +132,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
-
 
     //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해오는 요청
     @GetMapping("/profile")

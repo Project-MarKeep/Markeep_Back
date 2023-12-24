@@ -39,9 +39,6 @@ public class Folder {
     @ColumnDefault("false")
     private boolean hideFlag;
 
-    @Column(nullable = false)
-    private Long creator;
-
     private String folderImg;
 
     @ManyToOne(fetch = FetchType.EAGER)
