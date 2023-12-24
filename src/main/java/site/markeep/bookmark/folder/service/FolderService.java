@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.UserInFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
@@ -31,13 +33,11 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -76,15 +76,14 @@ public class FolderService {
         );
     }
 
-    public void update(FolderUpdateRequestDTO dto) {
-        Optional<Folder> foundFolder = folderRepository.findById(dto.getFolderId());
-        User user = userRepository.findById(dto.getUserId()).orElseThrow();
+    public List<FolderResponseDTO> update(FolderUpdateRequestDTO dto) {
+        Folder foundFolder = folderRepository.findById(dto.getFolderId()).orElseThrow(
+                () -> new RuntimeException("존재하지 않는 폴더입니다.")
+        );
+        foundFolder.update(dto);
+        Folder saved = folderRepository.save(foundFolder);
+        return retrieve(saved.getUser().getId());
 
-        foundFolder.ifPresent(folder -> {
-                            folder.setUser(user);
-                            folder.update(dto);
-                            folderRepository.save(folder);
-        });
     }
 
     public void delete(Long folderId) {
@@ -95,7 +94,6 @@ public class FolderService {
             throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
         }
     }
-
 
     public void addFolder(final AddFolderRequestDTO dto, final  Long id, final  String uploadedFilePath)  throws Exception  {
         // 1. 가입 여부 확인
@@ -234,11 +232,6 @@ public class FolderService {
         }
     }
 
-
-
-
-
-
     /*****************************************************
      . 커뮤니티 화면에서 폴더의 pin hover 누르면, 해당 폴더가 마이페이지에 생긴다.
      . 2.(service) 해당 폴더가 있는지 check -> 없으면  "잘못된 폴더 번호 입니다. MSG"
@@ -249,7 +242,7 @@ public class FolderService {
     public FolderResponseDTO addFolderPin(Long userId, Long folderId) throws Exception {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(
-                () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요 ")
+                        () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요 ")
                 );
 
         User user = getUser(userId);
@@ -257,14 +250,14 @@ public class FolderService {
         AddFolderRequestDTO dto =  AddFolderRequestDTO.builder()
                 .title(folder.getTitle())
                 .build();
-        
+
 
         //폴더 생성전에 이미지를 먼저 새로운 이름으로 복사 , 생성한다.
         String newFolderName = null;
         if(folder.getFolderImg() != null) {
             newFolderName = imageCopy(folder.getFolderImg());
-        }  
-        
+        }
+
         //폴더 생성
         //고려사항 발생, 폴더 이미지도 같이 복사,생성하는데 이지미id 를 새로 생성해서 저장하는 작업을 따로 해야함(db 생성)
 
@@ -312,7 +305,7 @@ public class FolderService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-       return  uniqueFileName+"."+extension;
+        return  uniqueFileName+"."+extension;
 //        CloseableHttpClient httpclient = HttpClients.createDefault();
 //        HttpGet httpget = new HttpGet(imageUrl);
 //        CloseableHttpResponse response = httpclient.execute(httpget);
@@ -338,5 +331,3 @@ public class FolderService {
         return extension;
     }
 }
-
-

@@ -27,8 +27,6 @@ public class TokenUserInfo {
 
     private boolean autoLogin;
 
-    private String token; // 인증 토큰
-
 //    public void LoginResponseDTO(User user, String token) {
 //
 //        this.email = user.getEmail();

@@ -1,9 +1,6 @@
 package site.markeep.bookmark.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -20,7 +17,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 @Slf4j
@@ -117,6 +113,7 @@ public class TokenProvider {
                 .getBody();
         // Claims라는 객체 타입으로 반환 한다.
         log.info("claim: {}",claims);
+
 
         return  TokenUserInfo.builder()
                 .id(Long.valueOf(claims.getSubject()))

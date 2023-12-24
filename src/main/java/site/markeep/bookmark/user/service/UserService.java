@@ -4,8 +4,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sun.jdi.InternalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +15,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
-import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
+import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
+import site.markeep.bookmark.user.dto.KakaoUserDTO;
+import site.markeep.bookmark.user.dto.SnsLoginDTO;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
@@ -32,17 +34,13 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.repository.UserRepositoryImpl;
 
 import javax.persistence.EntityManager;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static site.markeep.bookmark.user.entity.QUser.user;
-
-import java.util.Optional;
 
 
 @Service
@@ -57,6 +55,7 @@ public class UserService {
     private final TokenProvider tokenProvider;
     private final BCryptPasswordEncoder encoder;
     private final UserRepositoryImpl repoimpl;
+
     private final JPAQueryFactory queryFactory;
     private final EntityManager em;
     private final FollowRepository followRepository;
@@ -65,6 +64,15 @@ public class UserService {
     @Value("${upload.path.profile}")
     private String uploadProfilePath;
 
+
+    @Value("${kakao.client_id}")
+    private String KAKAO_CLIENT_ID;
+
+    @Value("${kakao.client_secret}")
+    private String KAKAO_CLIENT_SECRET;
+
+    @Value("${kakao.redirect_uri")
+    private String KAKAO_REDIRECT_URI;
 
     @Value("${naver.client_id}")
     private String NAVER_CLIENT_ID;
@@ -106,9 +114,11 @@ public class UserService {
 
         log.info("서비스 - dto에서 암호화 된 비번 비교 성공");
 
+        // 로그인 성공한 유저에게 제공할 액세스 토큰 생성
         String accessToken = tokenProvider.createAccessToken(user);
-        log.info("액세스 토큰 : {}", accessToken);
         log.info("액세스 토큰 생성 됨");
+        log.info("액세스 토큰 : {}", accessToken);
+        // 자동로그인 체크 + 로그인 성공한 유저에게 제공할 리프레시 토큰 생성
         String refreshToken = tokenProvider.createRefreshToken();
         log.info("리프레시 토큰 : {}", refreshToken);
         log.info("리프레시 토큰 생성 됨");
@@ -133,6 +143,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
+                .autoLogin(dto.isAutoLogin())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -146,49 +157,48 @@ public class UserService {
         User saved = userRepository.save(dto.toEntity(dto));
         folderRepository.save(
                 Folder.builder()
-//                    .creator(saved.getId())
-                        .user(saved)
-                        .title("기본 폴더")
-                        .build());
+                    .user(saved)
+                    .title("기본 폴더")
+                    .build());
     }
 
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
-
+    
+    
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
-
-    public LoginResponseDTO naverLogin(final String code) {
-        Map<String, Object> responseData = getNaverAccessToken(code);
+    public LoginResponseDTO naverLogin(final SnsLoginDTO requestDTO) {
+        Map<String, Object> responseData = getNaverAccessToken(requestDTO.getCode());
         log.info("token: {}", responseData.get("access_token"));
 
 
         Map<String, String> userInfo = getNaverUserInfo(responseData.get("access_token"));
 
+        String refreshToken = null;
+
+        // 사용자가 자동 로그인 체크했을 경우
+        if(requestDTO.isAutoLogin()) refreshToken = tokenProvider.createRefreshToken();
+
         // 중복되지 않았을 경우
         if(!isDuplicate(userInfo.get("response/email"))){
             userRepository.save(User.builder()
-                    .email(userInfo.get("response/email"))
-                    .password("password!")
-                    .nickname(userInfo.get("response/nickname"))
-                    .build()
-            );
+                            .email(userInfo.get("response/email"))
+                            .password("password!")
+                            .nickname(userInfo.get("response/nickname"))
+                            .refreshToken(refreshToken)
+                            .build()
+                    );
         }
 
         // 이미 가입돼 있는 경우
         User foundUser = userRepository.findByEmail(userInfo.get("response/email")).orElseThrow();
 
         String accessToken = tokenProvider.createAccessToken(foundUser);
-        String refreshToken = tokenProvider.createRefreshToken();
 
-        return LoginResponseDTO.builder()
-                .email(foundUser.getEmail())
-                .nickname(foundUser.getNickname())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return new LoginResponseDTO(foundUser, accessToken, refreshToken);
 
     }
 
@@ -267,6 +277,7 @@ public class UserService {
                         .refreshToken(refreshToken)
                         .build());
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
                         .email(googoleUserEmail)
                         .nickname(googleUserNickname)
                         .accessToken(accessToken)
@@ -282,6 +293,7 @@ public class UserService {
                         .autoLogin(dto.isAutoLogin())
                         .build());
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
                         .email(googoleUserEmail)
                         .nickname(googleUserNickname)
                         .accessToken(accessToken)
@@ -299,6 +311,9 @@ public class UserService {
                 em.flush();
                 em.clear();
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
+                        .email(googoleUserEmail)
+                        .nickname(googleUserNickname)
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
                         .build();
@@ -312,11 +327,79 @@ public class UserService {
                 em.flush();
                 em.clear();
                 return LoginResponseDTO.builder()
+                        .id(userRepository.findByEmail(googoleUserEmail).get().getId())
+                        .email(googoleUserEmail)
+                        .nickname(googleUserNickname)
                         .accessToken(accessToken)
                         .build();
-
             }
         }
+    }
+
+    public LoginResponseDTO kakaoService(SnsLoginDTO requestDTO) {
+
+        Map<String, Object> responseData = kakaoGetAccessToken(requestDTO.getCode());
+        String token = responseData.get("access_token").toString();
+        KakaoUserDTO responseDTO = getKakaoUserInfo(token);
+
+        String refreshToken = null;
+        if(requestDTO.isAutoLogin()) refreshToken = tokenProvider.createRefreshToken();
+
+
+
+        if(!isDuplicate(responseDTO.getKakaoAccount().getEmail())){
+            User saved = userRepository.save(responseDTO.toEntity(refreshToken));
+        }
+
+        User foundUser = userRepository.findByEmail(responseDTO.getKakaoAccount().getEmail()).orElseThrow();
+
+        String accessToken = tokenProvider.createAccessToken(foundUser);
+
+        return new LoginResponseDTO(foundUser, accessToken, refreshToken);
+    }
+
+    private KakaoUserDTO getKakaoUserInfo(String token) {
+        String requestUri = "https://kapi.kakao.com/v2/user/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        RestTemplate template = new RestTemplate();
+
+        ResponseEntity<KakaoUserDTO> responseEntity = template.exchange(requestUri, HttpMethod.GET, new HttpEntity<>(headers), KakaoUserDTO.class);
+
+        KakaoUserDTO responseData = responseEntity.getBody();
+
+        return responseData;
+
+    }
+
+    public Map<String, Object> kakaoGetAccessToken(String code) {
+        String requestUri = "https://kauth.kakao.com/oauth/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant-type", "authorization_code");
+        params.add("client_id", KAKAO_CLIENT_ID);
+        params.add("redirect_uri", KAKAO_REDIRECT_URI);
+        params.add("code", code);
+        params.add("client_secret", KAKAO_CLIENT_SECRET);
+
+        RestTemplate template = new RestTemplate();
+
+        ResponseEntity<Map> responseEntity = template.exchange(requestUri, HttpMethod.POST, new HttpEntity<>(headers, params), Map.class);
+
+        Map<String, Object> responseData = (Map<String, Object>) responseEntity.getBody();
+
+        return responseData;
+    }
+    public boolean switchFollowBtn(TokenUserInfo userInfo) {
+        log.warn("먼저 토큰 안에 id값 있는지부터 보까: {}",userInfo);
+
+        return false;
     }
 
     //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해 온다

@@ -27,6 +27,7 @@ public class FolderController {
 
     private final FolderService folderService;
 
+    // 마이페이지 입장 시, 기본폴더부터 모든 폴더 불러와주는 메서드
     @GetMapping("/my")
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
@@ -34,17 +35,15 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
-    
+    // 폴더 정보 업데이트 시켜주는 메서드
     @PatchMapping("/my")
     public ResponseEntity<?> update(
-            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
         log.info("/folders/my - PATCH 요청! - {}", dto);
-        dto.setUserId(userInfo.getId());
-        folderService.update(dto);
+        List<FolderResponseDTO> updatedList = folderService.update(dto);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(updatedList);
     }
 
     //폴더 삭제 요청

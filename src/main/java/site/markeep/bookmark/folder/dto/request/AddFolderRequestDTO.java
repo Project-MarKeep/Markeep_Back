@@ -30,14 +30,9 @@ public class AddFolderRequestDTO {
         return   Folder.builder()
                 .title(dto.title)
                 .hideFlag(dto.hideFlag)
-//                .creator(user.getId())
                 .folderImg(uploadedFilePath)
                 .user(user)
                 .build();
-
-
-
-
 //        Folder newFolder = Folder.builder()
 //                .title(dto.title)
 //                .hideFlag(dto.hideFlag)
