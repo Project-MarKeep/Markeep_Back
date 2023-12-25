@@ -3,8 +3,6 @@ package site.markeep.bookmark.folder.dto.response;
 import lombok.*;
 import site.markeep.bookmark.folder.entity.Folder;
 
-import java.time.LocalDateTime;
-
 @Setter @Getter
 @ToString @EqualsAndHashCode
 @NoArgsConstructor
@@ -15,9 +13,10 @@ public class FolderResponseDTO {
     private Long id;
     private String title;
     private Long userId;
+    private String nickname;
     private String folderImg;
+    private String profileImage;
     private boolean hideFlag;
-
 
     public FolderResponseDTO(Folder folder) {
         this.id = folder.getId();
@@ -26,5 +25,4 @@ public class FolderResponseDTO {
         this.folderImg = folder.getFolderImg();
         this.hideFlag = folder.isHideFlag();
     }
-
 }

@@ -1,6 +1,5 @@
 package site.markeep.bookmark.folder.service;
 
-import com.sun.jdi.InternalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -8,18 +7,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
+import site.markeep.bookmark.aws.S3Service;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
-import site.markeep.bookmark.folder.dto.response.FolderAllResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
-import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
-import site.markeep.bookmark.folder.dto.response.UserInFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
@@ -34,7 +28,6 @@ import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +48,7 @@ public class FolderService {
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
-
+    private S3Service s3Service;
 
 
     public List<FolderResponseDTO> retrieve(Long userId) {
@@ -64,7 +57,7 @@ public class FolderService {
         log.warn("user - {}",user);
 
         List<FolderResponseDTO> dtoList = folderList.stream()
-                .map(folder -> new FolderResponseDTO(folder))
+                .map(FolderResponseDTO::new)
                 .collect(Collectors.toList());
 
         return dtoList;
@@ -117,31 +110,18 @@ public class FolderService {
 
     public String uploadFolderImage(MultipartFile folderImg) throws IOException {
 
-        // 루트 디렉토리가 실존하는 지 확인 후 존재하지 않으면 생성.
-        // 배포시 막는다
-        File rootDir = new File(uploadRootPath);
-        if(!rootDir.exists()) rootDir.mkdirs();
-
         // 파일명을 유니크하게 변경 (이름 충돌 가능성을 대비)
         // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
         String uniqueFileName
                 = UUID.randomUUID() + "_" + folderImg.getOriginalFilename();
 
-        // 파일을 저장
-        //배포시 막는다
-        File uploadFile = new File(uploadRootPath + "/" + uniqueFileName);
-        folderImg.transferTo(uploadFile);
-
-        // 배포시 막는다
-        return uniqueFileName;
-        // 배포시 푼다
-//        return s3Service.uploadToS3Bucket(folderImg.getBytes(), uniqueFileName);
+        return s3Service.uploadToS3Bucket(folderImg.getBytes(), uniqueFileName);
 
     }
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyWord ) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyWord) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
         String[] keyWords = keyWord.split("\\s+");
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
@@ -149,87 +129,28 @@ public class FolderService {
         long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
         int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
 
-        // FolderAllResponseDTO 리스트 생성
-        List<FolderAllResponseDTO> responseDTOList = new ArrayList<>();
+        List<FolderResponseDTO> listResponseDTO = new ArrayList<>();
+
         for (Folder folder : folders) {
-            // 각 Folder에 대한 Tag 목록 추출
+            User foundUser = userRepository.findById(folder.getUser().getId()).orElseThrow();
 
-            FolderAllResponseDTO folderAllResponseDTO = new FolderAllResponseDTO();
-            // 폴더 이미지 얻어오기 및 folder 내용 밀어 넣기
-            folderAllResponseDTO.setFolder(folder);
-            folderAllResponseDTO.setUserId(folderRepository.getFolderUser(folder.getId()));
+            FolderResponseDTO responseDTO = FolderResponseDTO.builder()
+                        .id(folder.getId())
+                        .nickname(foundUser.getNickname())
+                        .folderImg(folder.getFolderImg())
+                        .profileImage(foundUser.getProfileImage())
+                        .title(folder.getTitle())
+                        .build();
 
-            loadFile(folderAllResponseDTO ,folder.getFolderImg());
-
-            responseDTOList.add(folderAllResponseDTO);
+            listResponseDTO.add(responseDTO);
         }
 
         return FolderListResponseDTO.builder()
                 .count(folders.size()) //총 게시물 수가 아니라 조회된 게시물의 개수
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
-                .folders(responseDTOList)
+                .list(listResponseDTO)
                 .build();
 
-    }
-
-    private FolderAllResponseDTO loadFile(FolderAllResponseDTO folderAllResponseDTO ,String folderImg) {
-
-        if(folderImg == null ) return folderAllResponseDTO;
-
-        try {
-
-            String filePath
-                    = uploadRootPath + "/" + folderImg;
-            // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
-            File folderfileFile = new File(filePath);
-
-            // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사가 없는 사람들은 경로가 존재하지 않을 것이다.
-            // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
-            if(!folderfileFile.exists()) {
-
-                throw new FileNotFoundException("등록된 이지미가 없습니다.");
-            }
-
-            // 해당 경로에 저장된 파일을 바이트 배열로 직렬화 해서 리턴.
-            byte[] fileData = FileCopyUtils.copyToByteArray(folderfileFile);
-
-            // 3. 응답 헤더에 컨텐츠 타입을 설정.
-            HttpHeaders headers = new HttpHeaders();
-            MediaType contentType = findExtensionAndGetMediaType(filePath);
-            if(contentType == null) {
-                throw new InternalException("발견된 파일은 이미지 파일이 아닙니다.");
-            }
-
-            headers.setContentType(contentType);
-            folderAllResponseDTO.setHeaders(headers);
-            folderAllResponseDTO.setFileData(fileData);
-
-            return  folderAllResponseDTO;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("파일을 찾을 수 없습니다.");
-        }
-    }
-
-    private MediaType findExtensionAndGetMediaType(String filePath) {
-
-        // 파일 경로에서 확장자 추출하기
-        // C:/todo_upload/nsadjknjkncjndnjs_abc.jpg
-        String ext
-                = filePath.substring(filePath.lastIndexOf(".") + 1);
-
-        // 추출한 확장자를 바탕으로 MediaType을 설정. -> Header에 들어갈 Content-type이 됨.
-        switch (ext.toUpperCase()) {
-            case "JPG": case "JPEG":
-                return MediaType.IMAGE_JPEG;
-            case "PNG":
-                return MediaType.IMAGE_PNG;
-            case "GIF":
-                return MediaType.IMAGE_GIF;
-            default:
-                return null;
-        }
     }
 
     /*****************************************************

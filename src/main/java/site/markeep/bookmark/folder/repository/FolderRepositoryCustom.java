@@ -6,5 +6,6 @@ import site.markeep.bookmark.folder.entity.Folder;
 
 public interface FolderRepositoryCustom {
     Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
+    Page<Folder> findAllOrderByPinCount(Pageable pageable);
 }
 

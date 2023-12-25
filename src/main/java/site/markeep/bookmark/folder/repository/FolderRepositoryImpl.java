@@ -23,7 +23,26 @@ public class FolderRepositoryImpl implements FolderRepositoryCustom{
     }
 
     @Override
-    public Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords) {
+    public Page<Folder> findAllOrderByPinCount(Pageable pageable) {
+        QFolder folder = QFolder.folder;
+
+        List<Folder> content = queryFactory.selectFrom(folder)
+                .leftJoin(folder.pins)
+                .groupBy(folder)
+                .orderBy(folder.pins.size().desc(), folder.createDate.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        long total = queryFactory.selectFrom(folder)
+                .leftJoin(folder.pins)
+                .groupBy(folder)
+                .fetchCount();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+        public Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords) {
         QFolder folder = QFolder.folder;
 
         BooleanExpression predicate = Arrays.stream(keywords)
