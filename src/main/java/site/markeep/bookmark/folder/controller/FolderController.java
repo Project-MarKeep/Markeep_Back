@@ -3,7 +3,9 @@ package site.markeep.bookmark.folder.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -65,6 +67,7 @@ public class FolderController {
             @RequestPart(value = "folderImage", required = false) MultipartFile folderImg,
             BindingResult result
     ){
+        log.warn("이미지 오는지 확인 : {}", folderImg);
 
         if(result.hasErrors()){
             log.warn(result.toString());
@@ -82,6 +85,7 @@ public class FolderController {
                 // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.
                 uploadedFilePath = folderService.uploadFolderImage(folderImg);
             }
+            log.warn("fileUrl: {}", uploadedFilePath);
             folderService.addFolder(dto,userInfo.getId(), uploadedFilePath );
             return ResponseEntity.ok().body("정상 등록 되었습니다.");
         } catch (Exception e) {
@@ -103,7 +107,14 @@ public class FolderController {
 
          log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
         try {
-            FolderListResponseDTO list = folderService.getList(dto,keyWord);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            TokenUserInfo userInfo = null;
+
+            if (authentication != null && authentication.getPrincipal() instanceof TokenUserInfo) {
+                userInfo = (TokenUserInfo) authentication.getPrincipal();
+            }
+
+            FolderListResponseDTO list = folderService.getList(dto, keyWord, userInfo != null ? userInfo.getId() : null);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());

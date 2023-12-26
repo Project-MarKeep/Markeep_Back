@@ -18,11 +18,16 @@ public class FolderResponseDTO {
     private String profileImage;
     private boolean hideFlag;
 
+    private int followFlag;
+    private int pinCount;
+
+
     public FolderResponseDTO(Folder folder) {
         this.id = folder.getId();
         this.title = folder.getTitle();
         this.userId = folder.getUser().getId();
         this.folderImg = folder.getFolderImg();
         this.hideFlag = folder.isHideFlag();
+        this.pinCount = folder.getPins().size();
     }
 }
