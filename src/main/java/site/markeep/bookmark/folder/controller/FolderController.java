@@ -97,13 +97,11 @@ public class FolderController {
      *****************************************************/
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
-//            @AuthenticationPrincipal TokenUserInfo userInfo,
              PageDTO dto,
-             String keyWord ) {
+             String keyWord
+     ) {
 
-         // 키워드에 spaces 가 있으면 쪼갠다
-
-
+         log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
         try {
             FolderListResponseDTO list = folderService.getList(dto,keyWord);
             return ResponseEntity.ok().body(list);

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.user.entity.User;
+
 import java.util.List;
 
 
@@ -20,7 +21,8 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
     @Query("SELECT count(p) as pincount FROM Pin p WHERE p.folder.id = :folderId")
     int countPinsByFolderId(@Param("folderId") Long folderId);
 
-    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
+//    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
+    Page<Folder> findAllOrderByPinCount(Pageable pageable);
 
     @Query(value = "SELECT user_id FROM Folder WHERE folder_id = :folderId", nativeQuery = true)
     Long getFolderUser(@Param("folderId") Long folderId);
@@ -33,7 +35,5 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
 
 //    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
 //    Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
-
-
 
 }
