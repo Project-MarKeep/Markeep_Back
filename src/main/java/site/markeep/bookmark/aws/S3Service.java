@@ -1,6 +1,8 @@
 package site.markeep.bookmark.aws;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -10,6 +12,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import javax.annotation.PostConstruct;
 
+@Service
+@Slf4j
 public class S3Service {
 
     private S3Client s3;
@@ -17,7 +21,7 @@ public class S3Service {
     @Value("${aws.credentials.accessKey}")
     private String accessKey;
 
-    @Value("${aws.credeitals.secretKey}")
+    @Value("${aws.credentials.secretKey}")
     private String secretKey;
 
     @Value("${aws.region}")
@@ -38,6 +42,7 @@ public class S3Service {
 
     public String uploadToS3Bucket(byte[] data, String uniqueFileName){
 
+        log.warn("data : {} fileName: {}", data);
         // S3 저장 형식 지정
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -48,6 +53,8 @@ public class S3Service {
         s3.putObject(request, RequestBody.fromBytes(data));
 
         // 해당 이미지 파일 URL 반환
-        return s3.utilities().getUrl(builder -> builder.key(uniqueFileName)).toString();
+        return s3.utilities()
+                .getUrl(builder -> builder.bucket(bucketName).key(uniqueFileName))
+                .toString();
     }
 }

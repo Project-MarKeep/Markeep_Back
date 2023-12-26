@@ -510,8 +510,8 @@ public class UserService {
 
     }
 
-    public int modifynickName(Long id, String nickName) {
-        return userRepository.modifynickName(nickName,id);
+    public int modifyNickname(Long id, String nickname) {
+        return userRepository.modifyNickname(nickname, id);
     }
 }
 

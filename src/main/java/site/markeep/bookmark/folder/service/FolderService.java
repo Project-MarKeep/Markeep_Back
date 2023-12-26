@@ -44,11 +44,11 @@ public class FolderService {
     private final TagRepository tagRepository;
     private final SiteRepository siteRepository;
     private final PinRepository pinRepository;
+    private final S3Service s3Service;
 
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
-    private S3Service s3Service;
 
 
     public List<FolderResponseDTO> retrieve(Long userId) {
@@ -114,7 +114,7 @@ public class FolderService {
         // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
         String uniqueFileName
                 = UUID.randomUUID() + "_" + folderImg.getOriginalFilename();
-
+        log.warn("folderImg.getBytes():{}", folderImg.getBytes());
         return s3Service.uploadToS3Bucket(folderImg.getBytes(), uniqueFileName);
 
     }
