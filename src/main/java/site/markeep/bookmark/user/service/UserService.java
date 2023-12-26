@@ -171,8 +171,8 @@ public class UserService {
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
-    
-    
+
+
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
@@ -508,6 +508,10 @@ public class UserService {
     public int create(Long id, String uploadedFilePath) {
         return userRepository.modifyProfileImage(uploadedFilePath,id);
 
+    }
+
+    public int modifynickName(Long id, String nickName) {
+        return userRepository.modifynickName(nickName,id);
     }
 }
 
