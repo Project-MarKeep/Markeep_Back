@@ -16,6 +16,7 @@ import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.pinn.repository.PinRepository;
 import site.markeep.bookmark.site.entity.Site;
@@ -45,6 +46,7 @@ public class FolderService {
     private final SiteRepository siteRepository;
     private final PinRepository pinRepository;
     private final S3Service s3Service;
+    private final FollowRepository followRepository;
 
 
     @Value("${upload.path.folder}")
@@ -141,7 +143,7 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyWord) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyWord,Long userId) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
         String[] keyWords = keyWord.split("\\s+");
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
@@ -161,6 +163,8 @@ public class FolderService {
                         .folderImg(folder.getFolderImg())
                         .profileImage(foundUser.getProfileImage())
                         .title(folder.getTitle())
+                        .pinCount(folder.getPins().size())
+                        .followFlag((userId != null) ? followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId()) : 0)
                         .build();
 
             listResponseDTO.add(responseDTO);
@@ -196,9 +200,9 @@ public class FolderService {
 
         //폴더 생성전에 이미지를 먼저 새로운 이름으로 복사 , 생성한다.
         String newFolderName = null;
-        if(folder.getFolderImg() != null) {
-            newFolderName = imageCopy(folder.getFolderImg());
-        }
+//        if(folder.getFolderImg() != null) {
+//            newFolderName = imageCopy(folder.getFolderImg());
+//        }
 
         //폴더 생성
         //고려사항 발생, 폴더 이미지도 같이 복사,생성하는데 이지미id 를 새로 생성해서 저장하는 작업을 따로 해야함(db 생성)

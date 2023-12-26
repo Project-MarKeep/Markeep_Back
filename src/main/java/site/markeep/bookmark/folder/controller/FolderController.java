@@ -3,7 +3,9 @@ package site.markeep.bookmark.folder.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -117,7 +119,14 @@ public class FolderController {
 
          log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
         try {
-            FolderListResponseDTO list = folderService.getList(dto,keyWord);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            TokenUserInfo userInfo = null;
+
+            if (authentication != null && authentication.getPrincipal() instanceof TokenUserInfo) {
+                userInfo = (TokenUserInfo) authentication.getPrincipal();
+            }
+
+            FolderListResponseDTO list = folderService.getList(dto, keyWord, userInfo != null ? userInfo.getId() : null);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());
