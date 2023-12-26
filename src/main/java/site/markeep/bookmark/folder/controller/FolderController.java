@@ -35,6 +35,18 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
+    @GetMapping("/my/search")
+    public ResponseEntity<?> searchMyList(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            PageDTO dto,
+            String keyword
+    ) {
+        log.warn("keyword: {}", keyword);
+        FolderListResponseDTO responseDTO = folderService.searchMyList(dto, userInfo.getId(), keyword);
+        return ResponseEntity.ok().body(responseDTO);
+    }
+
+
     // 폴더 정보 업데이트 시켜주는 메서드
     @PatchMapping("/my")
     public ResponseEntity<?> update(
