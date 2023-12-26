@@ -25,27 +25,12 @@ public class AddFolderRequestDTO {
 
 
     public Folder toEntity(AddFolderRequestDTO dto, User user, String uploadedFilePath) {
-        //Folder 를 생성한다.
-
         return   Folder.builder()
                 .title(dto.title)
                 .hideFlag(dto.hideFlag)
                 .folderImg(uploadedFilePath)
                 .user(user)
                 .build();
-//        Folder newFolder = Folder.builder()
-//                .title(dto.title)
-//                .hideFlag(dto.hideFlag)
-//                .user(dto.user)
-//                .build();
-        //생성된 폴더 아이디를 받아 Tag 를 생성한다.
-//        for (String tag : dto.tagName) {
-//            if (tag == null) break;
-//            Tag.builder()
-//                    .folder(newFolder)
-//                    .tagName(tag)
-//                    .build();
-//        }
     }
 
 }

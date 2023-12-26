@@ -11,6 +11,7 @@ import site.markeep.bookmark.site.dto.request.AddSiteRequestDTO;
 import site.markeep.bookmark.site.dto.request.SingleSiteInfoRequestDTO;
 import site.markeep.bookmark.site.dto.request.SiteDeleteRequestDTO;
 import site.markeep.bookmark.site.dto.request.UpdateSiteInfoRequestDTO;
+import site.markeep.bookmark.site.entity.QSite;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
 import site.markeep.bookmark.user.repository.UserRepository;
@@ -18,6 +19,7 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import java.util.List;
 
 import static site.markeep.bookmark.site.entity.QSite.site;
+
 
 @Service
 @Slf4j
@@ -46,7 +48,7 @@ public class SiteService {
         return siteRepository.findAll();
     }
 
-    // folderId값 가지고 있는 사이트들 다 불러오기
+    // folderId로 사이트 목록 조회
     public List<Site> getSiteList(Long folderId) {
 
         List<Site> siteList = folderRepository.findById(folderId)
@@ -65,7 +67,9 @@ public class SiteService {
         if(userId == null ) {
             throw new RuntimeException("회원 가입 확인해 주세요 ");
         }
-
+        if(!userId.equals(folderRepository.getFolderUser(dto.getFolderId()))){
+            throw new RuntimeException("회원님의 site 가 아닙니다 ");
+        }
         try {
             siteRepository.deleteById(dto.getSiteId());
         } catch (Exception e) {

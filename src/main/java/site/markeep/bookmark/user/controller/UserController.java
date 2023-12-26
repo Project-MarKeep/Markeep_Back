@@ -8,8 +8,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.user.dto.SnsLoginDTO;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
@@ -19,6 +21,9 @@ import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
 import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.service.UserService;
 import site.markeep.bookmark.util.MailService;
+
+import java.io.IOException;
+import java.util.UUID;
 
 
 @RestController
@@ -121,16 +126,24 @@ public class UserController {
 
 
     @GetMapping("/naver-login")
-    public ResponseEntity<?> naverLogin(String code){
-        log.info("api/auth/naverLogin - GET! -code:{}", code);
+    public ResponseEntity<?> naverLogin(@RequestBody SnsLoginDTO dto){
+        log.info("user/naver-login - GET! -code:{}", dto);
 
         try {
-            LoginResponseDTO responseDTO = userService.naverLogin(code);
+            LoginResponseDTO responseDTO = userService.naverLogin(dto);
             return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    @GetMapping("kakao-login")
+    public ResponseEntity<?> kakaoLogin(@RequestBody SnsLoginDTO dto) {
+        log.info("user/kakao-login - GET! -code:{}", dto);
+        LoginResponseDTO responseDTO = userService.kakaoService(dto);
+
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     //프로필 사진 + 닉네임 + 팔로잉/팔로워 수 + 이메일 값 조회해오는 요청
@@ -145,5 +158,61 @@ public class UserController {
         }
     }
 
+    //프로필 사진 등록
+    @PostMapping("/profile")
+    public ResponseEntity<?> addProfile(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImg
+    ){
+        log.warn("/user/profile - POST 요청! :{}", profileImg);
+
+        // 400 오류
+        if(userInfo.getId() == null) {
+            return ResponseEntity.badRequest()
+                    .body("가입된 회원이 아닙니다.");
+        }
+
+        try {
+            String uploadedFilePath = null;
+            if(profileImg != null) {
+                log.info("attached file name: {}", profileImg.getOriginalFilename());
+                // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.
+                uploadedFilePath = userService.uploadProfileImage(profileImg);
+            }
+            int modifyCnt = userService.create(userInfo.getId(),uploadedFilePath);
+            return ResponseEntity.ok()
+                    .body(modifyCnt);
+        } catch (Exception e) {
+            log.warn("기타 예외가 발생했습니다!");
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+
+    }
+
+
+    //닉네임 수정
+    @PutMapping("/nickname")
+    public ResponseEntity<?> modifyNickname(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            String nickname
+    ){
+        // 400 오류
+        if(userInfo.getId() == null) {
+            return ResponseEntity.badRequest()
+                    .body("가입된 회원이 아닙니다.");
+        }
+
+        try {
+            int modifyCnt = userService.modifyNickname(userInfo.getId(), nickname);
+            return ResponseEntity.ok()
+                    .body(modifyCnt);
+        } catch (Exception e) {
+            log.warn("기타 예외가 발생했습니다!");
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+
+    }
 
 }

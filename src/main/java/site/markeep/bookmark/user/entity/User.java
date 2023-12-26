@@ -6,7 +6,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.pinn.entity.Pin;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -60,14 +59,6 @@ public class User  {
     @Builder.Default
     @JsonManagedReference
     private List<Folder> folders = new ArrayList<>();
-
-//    @OneToMany(mappedBy = "user")
-//    @Builder.Default
-//    private List<Follow> follows = new ArrayList<>();
-
-//    @OneToMany(mappedBy = "user")
-//    @Builder.Default
-//    private List<Pin> pins = new ArrayList<>();
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;

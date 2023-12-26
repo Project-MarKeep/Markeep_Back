@@ -45,7 +45,7 @@ public class SiteController {
 
     }
 
-    // 폴더 하나 선택하면 폴더 안에 있는 사이트들 다 가져오는 메서드
+    // 사이트 목록 조회
     @GetMapping
     public ResponseEntity<?> getSiteList(@RequestParam Long folderId){
         log.warn("GET - getSiteList 요청 들어옴!");
@@ -71,7 +71,7 @@ public class SiteController {
         }
     }
 
-    // 사이트 단일 조합
+    // 사이트 단일 조회
     @GetMapping("/single")
     public ResponseEntity<?> getSingleSiteData(Long siteId){
         log.warn("GET - /site/single : {}", siteId);
@@ -90,9 +90,14 @@ public class SiteController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody SiteDeleteRequestDTO dto
     ) {
-        log.info("delete site 요청 들어옴 !!!! userid : {}, site id : {}, folder id : {}",userInfo.getId(),dto.getSiteId(),dto.getFolderId());
-        siteService.deleteSite(userInfo.getId(), dto);
-        return ResponseEntity.ok().body("사이트가 정상적으로 삭제되었습니다.");
+
+        try {
+            siteService.deleteSite(userInfo.getId(), dto);
+            return ResponseEntity.ok().body("사이트가 정상적으로 삭제되었습니다.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }
