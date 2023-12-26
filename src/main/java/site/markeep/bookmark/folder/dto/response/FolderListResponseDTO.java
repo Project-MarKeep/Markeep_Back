@@ -15,6 +15,6 @@ public class FolderListResponseDTO {
 
     private int count; //총 폴더 수
     private PageResponseDTO pageInfo; //페이지 랜더링 정보
-    private List<FolderAllResponseDTO> folders;//게시물 랜더링 정보
+    private List<FolderResponseDTO> list;//게시물 랜더링 정보
 
 }

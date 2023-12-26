@@ -1,8 +1,6 @@
 package site.markeep.bookmark.user.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.springframework.stereotype.Component;
 import site.markeep.bookmark.user.entity.Role;
 
 import javax.validation.constraints.Email;

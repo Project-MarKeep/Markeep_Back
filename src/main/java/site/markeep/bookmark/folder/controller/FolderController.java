@@ -27,6 +27,7 @@ public class FolderController {
 
     private final FolderService folderService;
 
+    // 마이페이지 입장 시, 기본폴더부터 모든 폴더 불러와주는 메서드
     @GetMapping("/my")
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
@@ -34,17 +35,15 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
-    
+    // 폴더 정보 업데이트 시켜주는 메서드
     @PatchMapping("/my")
     public ResponseEntity<?> update(
-            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
         log.info("/folders/my - PATCH 요청! - {}", dto);
-        dto.setUserId(userInfo.getId());
-        folderService.update(dto);
+        List<FolderResponseDTO> updatedList = folderService.update(dto);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(updatedList);
     }
 
     //폴더 삭제 요청
@@ -80,7 +79,6 @@ public class FolderController {
 
             String uploadedFilePath = null;
             if(folderImg != null) {
-                log.info("attached file name: {}", folderImg.getOriginalFilename());
                 // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.
                 uploadedFilePath = folderService.uploadFolderImage(folderImg);
             }
@@ -99,23 +97,17 @@ public class FolderController {
      *****************************************************/
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
-//            @AuthenticationPrincipal TokenUserInfo userInfo,
              PageDTO dto,
-             String keyWord ) {
+             String keyWord
+     ) {
 
-         // 키워드에 spaces 가 있으면 쪼갠다
-
-
+         log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
         try {
-            log.info("dddddddddddddddddddddddd");
             FolderListResponseDTO list = folderService.getList(dto,keyWord);
-            log.info("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
-            log.info("bbbbbbbbbbbbbbbbbbbbbb");
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.info("ccccccccccccccccccccccccccc");
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
@@ -134,9 +126,6 @@ public class FolderController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             int folderId
     ) throws Exception {
-        log.info("/folders/pin/ POST userInfo ! " +  userInfo);
-        log.info("/folders/pin/ POST folderId ! " +  folderId);
-
 
         if(userInfo == null || userInfo.getId() == null) {
             return ResponseEntity
@@ -152,8 +141,5 @@ public class FolderController {
         }
 
     }
-
-
-
 
 }

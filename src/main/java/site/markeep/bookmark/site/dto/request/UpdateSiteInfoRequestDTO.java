@@ -7,10 +7,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AddSiteRequestDTO {
+public class UpdateSiteInfoRequestDTO {
+
+    private Long userId;
+
     private Long folderId;
+
+    private Long siteId;
+
     private String siteName;
-    private String url;
+
     private String comment;
 
 }

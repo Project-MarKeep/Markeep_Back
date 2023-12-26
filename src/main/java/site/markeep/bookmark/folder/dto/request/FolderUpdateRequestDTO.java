@@ -17,6 +17,5 @@ public class FolderUpdateRequestDTO {
     private String title;
     private boolean hideFlag;
     private List<Tag> tags;
-    private Long userId;
 
 }
