@@ -197,4 +197,28 @@ public class UserController {
     }
 
 
+    //닉네임 수정
+    @PostMapping("/nickName")
+    public ResponseEntity<?> modifynickName(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            String nickName
+    ){
+        // 400 오류
+        if(userInfo.getId() == null) {
+            return ResponseEntity.badRequest()
+                    .body("가입된 회원이 아닙니다.");
+        }
+
+        try {
+            int modifyCnt = userService.modifynickName(userInfo.getId(),nickName);
+            return ResponseEntity.ok()
+                    .body(modifyCnt);
+        } catch (Exception e) {
+            log.warn("기타 예외가 발생했습니다!");
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+
+    }
+
 }

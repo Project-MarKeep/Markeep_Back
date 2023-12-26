@@ -18,4 +18,7 @@ UserRepositoryCustom{
     @Query("UPDATE User u SET u.profileImage = :profileImage WHERE u.id = :userId")
     int modifyProfileImage(@Param("profileImage") String profileImage , @Param("userId") Long userId);
 
+    @Modifying
+    @Query("UPDATE User u SET u.nickname = :nickName WHERE u.id = :userId")
+    int modifynickName(@Param("nickName")String nickName,@Param("userId") Long id);
 }
