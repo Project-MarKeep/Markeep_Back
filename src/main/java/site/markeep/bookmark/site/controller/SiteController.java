@@ -90,9 +90,14 @@ public class SiteController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody SiteDeleteRequestDTO dto
     ) {
-        log.info("delete site 요청 들어옴 !!!! userid : {}, site id : {}, folder id : {}",userInfo.getId(),dto.getSiteId(),dto.getFolderId());
-        siteService.deleteSite(userInfo.getId(), dto);
-        return ResponseEntity.ok().body("사이트가 정상적으로 삭제되었습니다.");
+
+        try {
+            siteService.deleteSite(userInfo.getId(), dto);
+            return ResponseEntity.ok().body("사이트가 정상적으로 삭제되었습니다.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }

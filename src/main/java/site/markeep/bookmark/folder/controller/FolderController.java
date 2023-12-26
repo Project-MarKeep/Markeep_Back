@@ -80,7 +80,6 @@ public class FolderController {
 
             String uploadedFilePath = null;
             if(folderImg != null) {
-                log.info("attached file name: {}", folderImg.getOriginalFilename());
                 // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.
                 uploadedFilePath = folderService.uploadFolderImage(folderImg);
             }
@@ -129,9 +128,6 @@ public class FolderController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             int folderId
     ) throws Exception {
-        log.info("/folders/pin/ POST userInfo ! " +  userInfo);
-        log.info("/folders/pin/ POST folderId ! " +  folderId);
-
 
         if(userInfo == null || userInfo.getId() == null) {
             return ResponseEntity

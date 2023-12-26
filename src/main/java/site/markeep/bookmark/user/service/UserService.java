@@ -13,9 +13,11 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.aws.S3Service;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
@@ -39,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static site.markeep.bookmark.user.entity.QUser.user;
 
@@ -59,6 +62,9 @@ public class UserService {
     private final JPAQueryFactory queryFactory;
     private final EntityManager em;
     private final FollowRepository followRepository;
+    private final S3Service s3Service;
+
+
 
 
     @Value("${upload.path.profile}")
@@ -125,17 +131,17 @@ public class UserService {
 
         userRefreshTokenRepository.findById(user.getId())
                 .ifPresentOrElse(
-            it -> it.updateRefreshToken(refreshToken),
-            () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
+                        it -> it.updateRefreshToken(refreshToken),
+                        () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
                 );
         userRepository.save(User.builder()
-                        .id(user.getId())
-                        .password(encodedPassword)
-                        .nickname(user.getNickname())
-                        .email(dto.getEmail())
-                        .joinDate(user.getJoinDate())
-                        .autoLogin(dto.isAutoLogin())
-                        .refreshToken(refreshToken)
+                .id(user.getId())
+                .password(encodedPassword)
+                .nickname(user.getNickname())
+                .email(dto.getEmail())
+                .joinDate(user.getJoinDate())
+                .autoLogin(dto.isAutoLogin())
+                .refreshToken(refreshToken)
                 .build());
 
         // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
@@ -165,8 +171,8 @@ public class UserService {
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
-    
-    
+
+
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
@@ -475,6 +481,37 @@ public class UserService {
             default:
                 return null;
         }
+    }
+
+
+    /**
+     * 업로드 된 파일을 서버에 저장하고 저장 경로를 리턴.
+     *
+     * @param profileImg - 업로드 된 파일의 정보
+     * @return 실제로 저장된 이미지 경로
+     */
+    public String uploadProfileImage(MultipartFile profileImg) throws IOException {
+
+        // 파일명을 유니크하게 변경 (이름 충돌 가능성을 대비)
+        // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
+        String uniqueFileName
+                = UUID.randomUUID() + "_" + profileImg.getOriginalFilename();
+
+        // 파일을 저장
+        //파일을 s3 버킷에 저장
+        return s3Service.uploadToS3Bucket(profileImg.getBytes(), uniqueFileName);
+
+    }
+
+
+    // 프로필 사진 등록
+    public int create(Long id, String uploadedFilePath) {
+        return userRepository.modifyProfileImage(uploadedFilePath,id);
+
+    }
+
+    public int modifynickName(Long id, String nickName) {
+        return userRepository.modifynickName(nickName,id);
     }
 }
 

@@ -6,7 +6,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import site.markeep.bookmark.folder.entity.Folder;
-import site.markeep.bookmark.pinn.entity.Pin;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

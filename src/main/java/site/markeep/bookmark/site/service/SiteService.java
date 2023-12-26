@@ -67,7 +67,9 @@ public class SiteService {
         if(userId == null ) {
             throw new RuntimeException("회원 가입 확인해 주세요 ");
         }
-
+        if(!userId.equals(folderRepository.getFolderUser(dto.getFolderId()))){
+            throw new RuntimeException("회원님의 site 가 아닙니다 ");
+        }
         try {
             siteRepository.deleteById(dto.getSiteId());
         } catch (Exception e) {
