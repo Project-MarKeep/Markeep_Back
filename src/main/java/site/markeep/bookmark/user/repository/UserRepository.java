@@ -20,5 +20,5 @@ UserRepositoryCustom{
 
     @Modifying
     @Query("UPDATE User u SET u.nickname = :nickName WHERE u.id = :userId")
-    int modifynickName(@Param("nickName")String nickName,@Param("userId") Long id);
+    int modifyNickname(@Param("nickName")String nickName,@Param("userId") Long id);
 }

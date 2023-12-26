@@ -162,15 +162,9 @@ public class UserController {
     @PostMapping("/profile")
     public ResponseEntity<?> addProfile(
             @AuthenticationPrincipal TokenUserInfo userInfo,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImg,
-            BindingResult result
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImg
     ){
-
-        if(result.hasErrors()) {
-            log.warn(result.toString());
-            return ResponseEntity.badRequest()
-                    .body(result.getFieldError());
-        }
+        log.warn("/user/profile - POST 요청! :{}", profileImg);
 
         // 400 오류
         if(userInfo.getId() == null) {
@@ -198,10 +192,10 @@ public class UserController {
 
 
     //닉네임 수정
-    @PostMapping("/nickName")
-    public ResponseEntity<?> modifynickName(
+    @PutMapping("/nickname")
+    public ResponseEntity<?> modifyNickname(
             @AuthenticationPrincipal TokenUserInfo userInfo,
-            String nickName
+            String nickname
     ){
         // 400 오류
         if(userInfo.getId() == null) {
@@ -210,7 +204,7 @@ public class UserController {
         }
 
         try {
-            int modifyCnt = userService.modifynickName(userInfo.getId(),nickName);
+            int modifyCnt = userService.modifyNickname(userInfo.getId(), nickname);
             return ResponseEntity.ok()
                     .body(modifyCnt);
         } catch (Exception e) {
