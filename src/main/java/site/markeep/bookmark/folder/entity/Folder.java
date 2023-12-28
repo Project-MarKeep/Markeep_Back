@@ -46,7 +46,7 @@ public class Folder {
     @JsonBackReference
     private User user;
 
-    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @OneToMany(mappedBy = "folder",cascade = CascadeType.REMOVE)
     @Builder.Default
     private List<Tag> tags = new ArrayList<>();
 
@@ -69,9 +69,19 @@ public class Folder {
         }
     }
     
-    public void update(FolderUpdateRequestDTO dto){
-        this.title = dto.getTitle();
-        this.tags = dto.getTags();
-        this.hideFlag = dto.isHideFlag();
-    }
+//    public void update(FolderUpdateRequestDTO dto){
+//        this.title = dto.getTitle();
+//        this.hideFlag = dto.isHideFlag();
+//
+//        // 기존 태그들 제거
+////        this.tags.clear();
+//
+//        // 새로운 태그들 추가
+////        for (String tagName : dto.getTags()) {
+////            Tag tag = new Tag();
+////            tag.setTagName(tagName);
+////            tag.setFolder(this);
+////            this.tags.add(tag);
+////        }
+//    }
 }
