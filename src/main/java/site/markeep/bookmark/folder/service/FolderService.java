@@ -65,6 +65,7 @@ public class FolderService {
         return dtoList;
     }
 
+
     public FolderListResponseDTO searchMyList(PageDTO dto, Long userId, String keyword) {
         log.warn(keyword);
         String[] keywords = keyword.split("\\s+");
@@ -85,6 +86,7 @@ public class FolderService {
                 .build();
 
     }
+
     public List<MyFolderResponseDTO> myRetrieve(Long userId) {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
@@ -95,6 +97,7 @@ public class FolderService {
                 .collect(Collectors.toList());
 
         return dtoList;
+
     }
 
     private User getUser(Long userId) {
