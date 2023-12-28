@@ -2,6 +2,8 @@ package site.markeep.bookmark.tag.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.entity.Folder;
@@ -11,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@ToString(exclude = {"folder"})
+@ToString(exclude = "folder")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Tag {
 
     @Id
@@ -32,7 +35,7 @@ public class Tag {
     @CreationTimestamp
     private LocalDateTime regdate;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
     @JsonBackReference
     private Folder folder;

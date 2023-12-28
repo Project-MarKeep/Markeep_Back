@@ -1,6 +1,8 @@
 package site.markeep.bookmark.site.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.entity.Folder;
@@ -10,7 +12,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
-@ToString
+@ToString(exclude = "folder")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Site {
 
     @Id

@@ -2,6 +2,8 @@ package site.markeep.bookmark.pinn.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.user.entity.User;
@@ -10,7 +12,7 @@ import javax.persistence.*;
 
 @Getter
 @Setter
-@ToString(exclude = {"folder"})
+@ToString(exclude = "folder")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,6 +20,7 @@ import javax.persistence.*;
 
 @Entity
 @Table
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Pin {
 
     @Id

@@ -1,6 +1,9 @@
 package site.markeep.bookmark.folder.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,6 +25,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Folder {
 
     @Id
@@ -46,16 +50,19 @@ public class Folder {
     @JsonBackReference
     private User user;
 
-    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @OneToMany(mappedBy = "folder", orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<Tag> tags = new ArrayList<>();
 
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<Pin> pins = new ArrayList<>();
 
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<Site> sites = new ArrayList<>();
 
     public  void  addTag(Tag tag) {

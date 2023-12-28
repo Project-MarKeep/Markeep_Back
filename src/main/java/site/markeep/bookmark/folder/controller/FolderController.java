@@ -2,6 +2,7 @@ package site.markeep.bookmark.folder.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,8 +51,9 @@ public class FolderController {
 
 
     // 폴더 정보 업데이트 시켜주는 메서드
-    @PatchMapping("/my")
+    @PutMapping(value = "/my")
     public ResponseEntity<?> update(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
         log.info("/folders/my - PATCH 요청! - {}", dto);

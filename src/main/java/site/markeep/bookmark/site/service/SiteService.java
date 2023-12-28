@@ -50,7 +50,7 @@ public class SiteService {
 
     // folderId로 사이트 목록 조회
     public List<Site> getSiteList(Long folderId) {
-
+        
         List<Site> siteList = folderRepository.findById(folderId)
                 .orElseThrow(
                         () -> new RuntimeException("폴더에 등록 된 사이트가 없습니다!")
