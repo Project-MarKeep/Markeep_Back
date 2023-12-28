@@ -418,7 +418,8 @@ public class UserService {
             profileResponseDTO.setEmail(user.get().getEmail());
             profileResponseDTO.setFollowerCount(followRepository.countByid_ToId(user.get().getId()));
             profileResponseDTO.setFollowingCount(followRepository.countByid_FromId(user.get().getId()));
-            loadFile(profileResponseDTO , user.get().getProfileImage());
+            profileResponseDTO.setProfileImage(user.get().getProfileImage());
+//            loadFile(profileResponseDTO , user.get().getProfileImage());
 
             return profileResponseDTO;
         } else {
@@ -427,41 +428,41 @@ public class UserService {
     }
 
     //프로필 사진을 얻어오자
-    private ProfileResponseDTO loadFile(ProfileResponseDTO  profileResponseDTO , String profileImg) {
-        if(profileImg == null ) return profileResponseDTO;
-        try {
-            String filePath
-                    = uploadProfilePath + "/" + profileImg;
-            // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
-            File folderfileFile = new File(filePath);
-
-            // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사가 없는 사람들은 경로가 존재하지 않을 것이다.
-            // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
-            if(!folderfileFile.exists()) {
-                throw new FileNotFoundException("등록된 이지미가 없습니다.");
-            }
-
-            // 해당 경로에 저장된 파일을 바이트 배열로 직렬화 해서 리턴.
-            byte[] fileData = FileCopyUtils.copyToByteArray(folderfileFile);
-
-            // 3. 응답 헤더에 컨텐츠 타입을 설정.
-            HttpHeaders headers = new HttpHeaders();
-            MediaType contentType = findExtensionAndGetMediaType(filePath);
-            if(contentType == null) {
-                throw new InternalException("발견된 파일은 이미지 파일이 아닙니다.");
-            }
-
-            headers.setContentType(contentType);
-            profileResponseDTO.setHeaders(headers);
-            profileResponseDTO.setFileData(fileData);
-
-            return  profileResponseDTO;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("파일을 찾을 수 없습니다.");
-        }
-    }
+//    private ProfileResponseDTO loadFile(ProfileResponseDTO  profileResponseDTO , String profileImg) {
+//        if(profileImg == null ) return profileResponseDTO;
+//        try {
+//            String filePath
+//                    = uploadProfilePath + "/" + profileImg;
+//            // 2. 얻어낸 파일 경로를 통해 실제 파일 데이터를 로드하기.
+//            File folderfileFile = new File(filePath);
+//
+//            // 모든 사용자가 프로필 사진을 가지는 것은 아니다. -> 프사가 없는 사람들은 경로가 존재하지 않을 것이다.
+//            // 만약 존재하지 않는 경로라면 클라이언트로 404 status를 리턴.
+//            if(!folderfileFile.exists()) {
+//                throw new FileNotFoundException("등록된 이지미가 없습니다.");
+//            }
+//
+//            // 해당 경로에 저장된 파일을 바이트 배열로 직렬화 해서 리턴.
+//            byte[] fileData = FileCopyUtils.copyToByteArray(folderfileFile);
+//
+//            // 3. 응답 헤더에 컨텐츠 타입을 설정.
+//            HttpHeaders headers = new HttpHeaders();
+//            MediaType contentType = findExtensionAndGetMediaType(filePath);
+//            if(contentType == null) {
+//                throw new InternalException("발견된 파일은 이미지 파일이 아닙니다.");
+//            }
+//
+//            headers.setContentType(contentType);
+//            profileResponseDTO.setHeaders(headers);
+//            profileResponseDTO.setFileData(fileData);
+//
+//            return  profileResponseDTO;
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            throw new RuntimeException("파일을 찾을 수 없습니다.");
+//        }
+//    }
 
     private MediaType findExtensionAndGetMediaType(String filePath) {
 
