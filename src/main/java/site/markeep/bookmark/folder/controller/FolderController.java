@@ -15,6 +15,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 
@@ -37,15 +38,32 @@ public class FolderController {
         return ResponseEntity.ok().body(folderList);
     }
 
+    @GetMapping("/my/search")
+    public ResponseEntity<?> searchMyList(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            PageDTO dto,
+            String keyword
+    ) {
+        log.warn("keyword: {}", keyword);
+        FolderListResponseDTO responseDTO = folderService.searchMyList(dto, userInfo.getId(), keyword);
+        return ResponseEntity.ok().body(responseDTO);
+    }
+
+
     // 폴더 정보 업데이트 시켜주는 메서드
     @PatchMapping("/my")
     public ResponseEntity<?> update(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
-        log.info("/folders/my - PATCH 요청! - {}", dto);
-        List<FolderResponseDTO> updatedList = folderService.update(dto);
+        log.info("/folders/my - PATCH 요청!!!!!!!!!!!!!!! - {}", dto);
+        try {
+            List<MyFolderResponseDTO> updatedList = folderService.update(dto,userInfo.getId());
+            return  ResponseEntity.ok().body(updatedList);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
 
-        return ResponseEntity.ok().body(updatedList);
     }
 
     //폴더 삭제 요청
@@ -143,6 +161,7 @@ public class FolderController {
                     .badRequest()
                     .body("미가입 회원입니다.");
         }
+
         try {
             FolderResponseDTO folderResponseDTO =  folderService.addFolderPin(userInfo.getId(), Long.valueOf(folderId));
             return  ResponseEntity.ok().body(folderResponseDTO);

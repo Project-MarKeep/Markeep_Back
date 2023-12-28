@@ -14,6 +14,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
@@ -28,11 +29,10 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
+import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,21 +65,89 @@ public class FolderService {
         return dtoList;
     }
 
+
+    public FolderListResponseDTO searchMyList(PageDTO dto, Long userId, String keyword) {
+        log.warn(keyword);
+        String[] keywords = keyword.split("\\s+");
+        log.warn(keywords.toString());
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+        Page<Folder> folderPage = folderRepository.findAllByKeywords(pageable, userId, keywords);
+        List<Folder> folderList = folderPage.getContent();
+
+
+        List<FolderResponseDTO> dtoList = folderList.stream()
+                .map(FolderResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return FolderListResponseDTO.builder()
+                .count(folderList.size())
+                .pageInfo(new PageResponseDTO(folderPage))
+                .list(dtoList)
+                .build();
+
+    }
+
+    public List<MyFolderResponseDTO> myRetrieve(Long userId) {
+        User user = getUser(userId);
+        List<Folder> folderList = user.getFolders();
+        log.warn("user - {}",user);
+
+        List<MyFolderResponseDTO> dtoList = folderList.stream()
+                .map(MyFolderResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return dtoList;
+
+    }
+
     private User getUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("회원정보가 없습니다.")
         );
     }
 
-    public List<FolderResponseDTO> update(FolderUpdateRequestDTO dto) {
+    @Transactional
+    public List<MyFolderResponseDTO> update(FolderUpdateRequestDTO dto,Long userId) {
         Folder foundFolder = folderRepository.findById(dto.getFolderId()).orElseThrow(
                 () -> new RuntimeException("존재하지 않는 폴더입니다.")
         );
-        foundFolder.update(dto);
-        Folder saved = folderRepository.save(foundFolder);
-        return retrieve(saved.getUser().getId());
+        if(!Objects.equals(userId, foundFolder.getUser().getId())){
+            throw new RuntimeException("user 폴더가 아닙니다.");
+        }
+
+
+        foundFolder.getTags().clear();
+        foundFolder.setTitle(dto.getTitle());
+        foundFolder.setHideFlag(dto.isHideFlag());
+
+
+        Folder saved;
+        try {
+            saved = folderRepository.save(foundFolder); // 여기서 폴더가 수정될때, tag 은 자동 삭제된다.
+            int deleteCount = tagRepository.deleteTagsByFolderId(saved.getId());
+
+            // folder 수정이 정상이라면 tag insert
+            List<Tag> tagList = new ArrayList<>();
+            for (String tag : dto.getTags()) {
+
+                if (tag == null) break;
+                Tag savedTag = tagRepository.save(Tag.builder()
+                        .folder(foundFolder)
+                        .tagName(tag)
+                        .build());
+                saved.addTag(savedTag);
+                tagList.add(savedTag); //저장된 태그를 리스트에 추가. 혹시 나중에 쓸까 싶어 일단 정보를 담는다
+
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("폴더 수정에 실패했습니다.");
+        }
+
+        return myRetrieve(saved.getUser().getId());
 
     }
+
 
     public void delete(Long folderId) {
         try {
@@ -116,7 +184,6 @@ public class FolderService {
         // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
         String uniqueFileName
                 = UUID.randomUUID() + "_" + folderImg.getOriginalFilename();
-        log.warn("folderImg.getBytes():{}", folderImg.getBytes());
         return s3Service.uploadToS3Bucket(folderImg.getBytes(), uniqueFileName);
 
     }
@@ -172,6 +239,7 @@ public class FolderService {
                 );
 
         User user = getUser(userId);
+
         //Folder , Site , Pin 생성
         AddFolderRequestDTO dto =  AddFolderRequestDTO.builder()
                 .title(folder.getTitle())
@@ -195,6 +263,9 @@ public class FolderService {
 //        pinRepository.save(Pin.builder().folder(folder).user(user).build());
         pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
 
+        //닉 네임
+
+
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
         for (Site site : sites){
@@ -206,7 +277,12 @@ public class FolderService {
                     .build());
         }
 
-        return  new FolderResponseDTO(folderNew);
+        FolderResponseDTO folderResponseDTO = new FolderResponseDTO(folderNew);
+        folderResponseDTO.setNickname(user.getNickname());
+        folderResponseDTO.setProfileImage(user.getProfileImage());
+
+
+        return  folderResponseDTO;
     }
 
     //기존의 이미지 파일을 복사, 새로운 url 을 부여 한다.
@@ -256,4 +332,5 @@ public class FolderService {
         }
         return extension;
     }
+
 }
