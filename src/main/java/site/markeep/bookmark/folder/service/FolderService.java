@@ -65,6 +65,27 @@ public class FolderService {
         return dtoList;
     }
 
+    public FolderListResponseDTO searchMyList(PageDTO dto, Long userId, String keyword) {
+        log.warn(keyword);
+        String[] keywords = keyword.split("\\s+");
+        log.warn(keywords.toString());
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+        Page<Folder> folderPage = folderRepository.findAllByKeywords(pageable, userId, keywords);
+        List<Folder> folderList = folderPage.getContent();
+
+
+
+        List<FolderResponseDTO> dtoList = folderList.stream()
+                .map(FolderResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return FolderListResponseDTO.builder()
+                .count(folderList.size())
+                .pageInfo(new PageResponseDTO(folderPage))
+                .list(dtoList)
+                .build();
+    }
+
     private User getUser(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("회원정보가 없습니다.")
@@ -116,7 +137,6 @@ public class FolderService {
         // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
         String uniqueFileName
                 = UUID.randomUUID() + "_" + folderImg.getOriginalFilename();
-        log.warn("folderImg.getBytes():{}", folderImg.getBytes());
         return s3Service.uploadToS3Bucket(folderImg.getBytes(), uniqueFileName);
 
     }
@@ -256,4 +276,5 @@ public class FolderService {
         }
         return extension;
     }
+
 }
