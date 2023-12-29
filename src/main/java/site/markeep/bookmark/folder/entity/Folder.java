@@ -50,7 +50,7 @@ public class Folder {
     @Builder.Default
     private List<Tag> tags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @OneToMany(mappedBy = "folder",cascade = CascadeType.REMOVE)
     @Builder.Default
     private List<Pin> pins = new ArrayList<>();
 
@@ -84,4 +84,14 @@ public class Folder {
 ////            this.tags.add(tag);
 ////        }
 //    }
+
+//    @PreRemove
+//    private void preRemove() {
+//        for (Pin pin : pins) {
+//            if (pin.getNewFolder() != null) {
+//                pin.setNewFolder(null);
+//            }
+//        }
+//    }
+
 }

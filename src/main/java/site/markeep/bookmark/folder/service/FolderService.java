@@ -30,6 +30,7 @@ import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
 import javax.transaction.Transactional;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class FolderService {
 
     private final FolderRepository folderRepository;
@@ -47,10 +49,11 @@ public class FolderService {
     private final PinRepository pinRepository;
     private final S3Service s3Service;
     private final FollowRepository followRepository;
-
+    private BufferedOutputStream entityManager;
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
+
 
 
     public List<FolderResponseDTO> retrieve(Long userId) {
@@ -106,7 +109,6 @@ public class FolderService {
         );
     }
 
-    @Transactional
     public List<MyFolderResponseDTO> update(FolderUpdateRequestDTO dto,Long userId) {
         Folder foundFolder = folderRepository.findById(dto.getFolderId()).orElseThrow(
                 () -> new RuntimeException("존재하지 않는 폴더입니다.")
@@ -123,21 +125,22 @@ public class FolderService {
 
         Folder saved;
         try {
-            saved = folderRepository.save(foundFolder); // 여기서 폴더가 수정될때, tag 은 자동 삭제된다.
-            int deleteCount = tagRepository.deleteTagsByFolderId(saved.getId());
+            saved = folderRepository.save(foundFolder); // 여기서 폴더가 수정될때, tag 가 삭제가 안된다.
+            int deleteCount = tagRepository.deleteTagsByFolderId(saved.getId()); // TAG강제 삭제
 
             // folder 수정이 정상이라면 tag insert
             List<Tag> tagList = new ArrayList<>();
-            for (String tag : dto.getTags()) {
+            if(dto.getTags() != null) {
+                for (String tag : dto.getTags()) {
+                    if (tag == null) break;
+                    Tag savedTag = tagRepository.save(Tag.builder()
+                            .folder(foundFolder)
+                            .tagName(tag)
+                            .build());
+                    saved.addTag(savedTag);
+                    tagList.add(savedTag); //저장된 태그를 리스트에 추가. 혹시 나중에 쓸까 싶어 일단 정보를 담는다
 
-                if (tag == null) break;
-                Tag savedTag = tagRepository.save(Tag.builder()
-                        .folder(foundFolder)
-                        .tagName(tag)
-                        .build());
-                saved.addTag(savedTag);
-                tagList.add(savedTag); //저장된 태그를 리스트에 추가. 혹시 나중에 쓸까 싶어 일단 정보를 담는다
-
+                }
             }
         } catch (Exception e){
             e.printStackTrace();
@@ -149,11 +152,20 @@ public class FolderService {
     }
 
 
-    public void delete(Long folderId) {
+    public void delete(Long folderId, Long userId) {
+        Folder foundFolder = folderRepository.findById(folderId).orElseThrow(
+                () -> new RuntimeException("존재하지 않는 폴더입니다.")
+        );
+        Folder folder = folderRepository.findById(folderId).orElse(null);
+        if(!Objects.equals(userId, foundFolder.getUser().getId())){
+            throw new RuntimeException("user 폴더가 아닙니다.");
+        }
+
         try {
             folderRepository.deleteById(folderId);
         } catch (Exception e) {
             log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
         }
     }
@@ -261,7 +273,8 @@ public class FolderService {
 
         //핀 생성
 //        pinRepository.save(Pin.builder().folder(folder).user(user).build());
-        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
+//        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
+        pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
         //닉 네임
 

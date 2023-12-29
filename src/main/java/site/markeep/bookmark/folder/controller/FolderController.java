@@ -68,9 +68,16 @@ public class FolderController {
 
     //폴더 삭제 요청
     @DeleteMapping("/my/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long folderId) {
-        folderService.delete(folderId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @PathVariable("id") Long folderId) {
+        try {
+            folderService.delete(folderId,userInfo.getId());
+            return ResponseEntity.ok().body("정상 삭제 되었습니다.");
+        } catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        
     }
     
     /*****************************************************
