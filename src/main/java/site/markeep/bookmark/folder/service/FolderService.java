@@ -14,6 +14,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
 import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
@@ -56,13 +57,13 @@ public class FolderService {
 
 
 
-    public List<FolderResponseDTO> retrieve(Long userId) {
+    public List<FolderWithTagsResponseDTO> retrieve(Long userId) {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
 
-        List<FolderResponseDTO> dtoList = folderList.stream()
-                .map(FolderResponseDTO::new)
+        List<FolderWithTagsResponseDTO> dtoList = folderList.stream()
+                .map(FolderWithTagsResponseDTO::new)
                 .collect(Collectors.toList());
 
         return dtoList;
