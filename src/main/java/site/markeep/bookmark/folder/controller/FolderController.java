@@ -116,10 +116,10 @@ public class FolderController {
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
              PageDTO dto,
-             String keyWord
+             String keyword
      ) {
 
-         log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
+         log.warn("/folders/all - GET 요청 !! keyword: {} ", keyword);
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             TokenUserInfo userInfo = null;
@@ -128,7 +128,7 @@ public class FolderController {
                 userInfo = (TokenUserInfo) authentication.getPrincipal();
             }
 
-            FolderListResponseDTO list = folderService.getList(dto, keyWord, userInfo != null ? userInfo.getId() : null);
+            FolderListResponseDTO list = folderService.getList(dto, keyword, userInfo != null ? userInfo.getId() : null);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());

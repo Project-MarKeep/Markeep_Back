@@ -70,7 +70,7 @@ public class FolderService {
         String[] keywords = keyword.split("\\s+");
         log.warn(keywords.toString());
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-        Page<Folder> folderPage = folderRepository.findAllByKeywords(pageable, userId, keywords);
+        Page<Folder> folderPage = folderRepository.findAllBykeywords(pageable, userId, keywords);
         List<Folder> folderList = folderPage.getContent();
 
 
@@ -143,10 +143,10 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyWord,Long userId) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyword,Long userId) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-        String[] keyWords = keyWord.split("\\s+");
-        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
+        String[] keywords = keyword.split("\\s+");
+        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountkeywords(pageable, keywords);
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
         long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
         int totalPages = folderPage.getTotalPages(); // 전체 페이지 수

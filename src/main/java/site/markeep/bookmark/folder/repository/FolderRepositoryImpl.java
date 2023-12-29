@@ -27,7 +27,7 @@ public class FolderRepositoryImpl implements FolderRepositoryCustom{
         this.queryFactory = new JPAQueryFactory(entityManager);
     }
 
-        public Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords) {
+        public Page<Folder> findAllOrderByPinCountkeywords(Pageable pageable, String[] keywords) {
         QFolder folder = QFolder.folder;
 
         BooleanExpression predicate = Arrays.stream(keywords)
@@ -56,7 +56,7 @@ public class FolderRepositoryImpl implements FolderRepositoryCustom{
     }
 
     @Override
-    public Page<Folder> findAllByKeywords(Pageable pageable, Long userId, String[] keywords) {
+    public Page<Folder> findAllBykeywords(Pageable pageable, Long userId, String[] keywords) {
 
         BooleanExpression predicate = Arrays.stream(keywords)
                 .filter(keyword -> keyword != null && !keyword.isEmpty())

@@ -65,11 +65,8 @@ public class UserService {
     private final S3Service s3Service;
 
 
-
-
     @Value("${upload.path.profile}")
     private String uploadProfilePath;
-
 
     @Value("${kakao.client_id}")
     private String KAKAO_CLIENT_ID;
@@ -98,6 +95,8 @@ public class UserService {
     @Value("${google.scope}")
     private String GOOGLE_SCOPE;
 
+    private String refreshToken;
+
     public LoginResponseDTO login(LoginRequestDTO dto) throws Exception {
 
         log.info("로그인 서비스로 넘어옴");
@@ -125,15 +124,24 @@ public class UserService {
         log.info("액세스 토큰 생성 됨");
         log.info("액세스 토큰 : {}", accessToken);
         // 자동로그인 체크 + 로그인 성공한 유저에게 제공할 리프레시 토큰 생성
-        String refreshToken = tokenProvider.createRefreshToken();
+        
+        // 리프레시 토큰 값 선언
+        refreshToken = tokenProvider.createRefreshToken();
         log.info("리프레시 토큰 : {}", refreshToken);
         log.info("리프레시 토큰 생성 됨");
 
-        userRefreshTokenRepository.findById(user.getId())
-                .ifPresentOrElse(
-                        it -> it.updateRefreshToken(refreshToken),
-                        () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
-                );
+
+
+        if(dto.isAutoLogin()){
+            // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
+            userRefreshTokenRepository.findById(user.getId())
+                    .ifPresentOrElse(
+                            it -> it.updateRefreshToken(refreshToken),
+                            () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
+                    );
+        }else {
+            refreshToken = null;
+        }
         userRepository.save(User.builder()
                 .id(user.getId())
                 .password(encodedPassword)
@@ -143,8 +151,6 @@ public class UserService {
                 .autoLogin(dto.isAutoLogin())
                 .refreshToken(refreshToken)
                 .build());
-
-        // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
         return LoginResponseDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
