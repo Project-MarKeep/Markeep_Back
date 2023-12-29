@@ -17,6 +17,8 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
+import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 
@@ -35,7 +37,7 @@ public class FolderController {
     @GetMapping("/my")
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
-        List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
+        List<FolderWithTagsResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
     }
 
@@ -57,17 +59,28 @@ public class FolderController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
-        log.info("/folders/my - PATCH 요청! - {}", dto);
-        List<FolderResponseDTO> updatedList = folderService.update(dto);
+        log.info("/folders/my - PATCH 요청!!!!!!!!!!!!!!! - {}", dto);
+        try {
+            List<MyFolderResponseDTO> updatedList = folderService.update(dto,userInfo.getId());
+            return  ResponseEntity.ok().body(updatedList);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
 
-        return ResponseEntity.ok().body(updatedList);
     }
 
     //폴더 삭제 요청
     @DeleteMapping("/my/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long folderId) {
-        folderService.delete(folderId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @PathVariable("id") Long folderId) {
+        try {
+            folderService.delete(folderId,userInfo.getId());
+            return ResponseEntity.ok().body("정상 삭제 되었습니다.");
+        } catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        
     }
     
     /*****************************************************
@@ -155,6 +168,7 @@ public class FolderController {
                     .badRequest()
                     .body("미가입 회원입니다.");
         }
+
         try {
             FolderResponseDTO folderResponseDTO =  folderService.addFolderPin(userInfo.getId(), Long.valueOf(folderId));
             return  ResponseEntity.ok().body(folderResponseDTO);

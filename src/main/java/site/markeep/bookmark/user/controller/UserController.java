@@ -196,7 +196,7 @@ public class UserController {
             }
             int modifyCnt = userService.create(userInfo.getId(),uploadedFilePath);
             return ResponseEntity.ok()
-                    .body(modifyCnt);
+                    .body(uploadedFilePath);
         } catch (Exception e) {
             log.warn("기타 예외가 발생했습니다!");
             e.printStackTrace();

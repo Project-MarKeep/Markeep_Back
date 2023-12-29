@@ -18,8 +18,6 @@ public class FolderUpdateRequestDTO {
     private Long folderId;
     private String title;
     private boolean hideFlag;
-
-    @JsonBackReference
-    private List<Tag> tags;
+    private List<String> tags;
 
 }
