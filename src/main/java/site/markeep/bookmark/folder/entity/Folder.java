@@ -1,6 +1,7 @@
 package site.markeep.bookmark.folder.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -56,6 +57,7 @@ public class Folder {
 
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<Site> sites = new ArrayList<>();
 
     public  void  addTag(Tag tag) {

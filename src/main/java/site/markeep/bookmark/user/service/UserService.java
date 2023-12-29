@@ -513,5 +513,7 @@ public class UserService {
     public int modifyNickname(Long id, String nickname) {
         return userRepository.modifyNickname(nickname, id);
     }
+
+
 }
 

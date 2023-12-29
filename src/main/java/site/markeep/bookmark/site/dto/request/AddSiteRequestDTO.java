@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AddSiteRequestDTO {
+
     private Long folderId;
     private String siteName;
     private String url;

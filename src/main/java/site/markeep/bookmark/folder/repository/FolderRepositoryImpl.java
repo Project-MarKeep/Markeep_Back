@@ -18,7 +18,6 @@ import static site.markeep.bookmark.folder.entity.QFolder.folder;
 import static site.markeep.bookmark.user.entity.QUser.user;
 
 @Slf4j
-
 public class FolderRepositoryImpl implements FolderRepositoryCustom{
 
     private final JPAQueryFactory queryFactory;

@@ -2,6 +2,7 @@ package site.markeep.bookmark.folder.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -86,12 +87,9 @@ public class FolderController {
             return ResponseEntity.badRequest().body(result.getFieldError());
         }
         if(userInfo == null || userInfo.getId() == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         try {
-
             String uploadedFilePath = null;
             if(folderImg != null) {
                 // 전달받은 프로필 이미지를 먼저 지정된 경로에 저장한 후 DB 저장을 위해 경로를 받아오자.

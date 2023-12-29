@@ -11,6 +11,7 @@ import site.markeep.bookmark.site.dto.request.AddSiteRequestDTO;
 import site.markeep.bookmark.site.dto.request.SingleSiteInfoRequestDTO;
 import site.markeep.bookmark.site.dto.request.SiteDeleteRequestDTO;
 import site.markeep.bookmark.site.dto.request.UpdateSiteInfoRequestDTO;
+import site.markeep.bookmark.site.dto.response.SiteResponseDTO;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
 import site.markeep.bookmark.site.service.SiteService;
@@ -32,17 +33,15 @@ public class SiteController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody AddSiteRequestDTO dto
     ){
-        log.info("/site - POST 요청! {}", dto);
+        log.warn("/site - POST 요청! {}", dto);
         try {
-            List<?> sites = siteService.addSite(dto);
-            return ResponseEntity.ok().body(sites);
+            siteService.addSite(userInfo, dto);
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-
 //        log.warn("사이트가 등록되는게 맞나 볼게: {}", sites);
-
     }
 
     // 사이트 목록 조회
@@ -50,7 +49,7 @@ public class SiteController {
     public ResponseEntity<?> getSiteList(@RequestParam Long folderId){
         log.warn("GET - getSiteList 요청 들어옴!");
         try {
-            List<Site> siteList = siteService.getSiteList(folderId);
+            List<SiteResponseDTO> siteList = siteService.getSiteList(folderId);
             return ResponseEntity.ok().body(siteList);
         } catch (Exception e) {
             e.printStackTrace();
