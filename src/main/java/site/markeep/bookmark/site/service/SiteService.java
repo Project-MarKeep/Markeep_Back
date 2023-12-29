@@ -5,18 +5,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.site.dto.request.AddSiteRequestDTO;
 import site.markeep.bookmark.site.dto.request.SingleSiteInfoRequestDTO;
 import site.markeep.bookmark.site.dto.request.SiteDeleteRequestDTO;
 import site.markeep.bookmark.site.dto.request.UpdateSiteInfoRequestDTO;
+import site.markeep.bookmark.site.dto.response.SiteResponseDTO;
 import site.markeep.bookmark.site.entity.QSite;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
 import site.markeep.bookmark.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static site.markeep.bookmark.site.entity.QSite.site;
 
@@ -34,10 +37,12 @@ public class SiteService {
 //    private final EntityManager em;
 //    JPAQuery<?> query = new JPAQuery<>(em);
 
-    public List<?> addSite(AddSiteRequestDTO dto) {
+    public void addSite(TokenUserInfo userInfo, AddSiteRequestDTO dto) {
         Folder foundFolder = folderRepository.findById(dto.getFolderId()).orElseThrow(
                 () -> new RuntimeException("없는 폴더입니다. 먼저 폴더를 생성해주세요!")
         );
+
+        log.warn("foundFolder ->");
 
         siteRepository.save(Site.builder()
                 .siteName(dto.getSiteName())
@@ -45,18 +50,25 @@ public class SiteService {
                 .comment(dto.getComment())
                 .folder(foundFolder)
                 .build());
-        return siteRepository.findAll();
     }
 
     // folderId로 사이트 목록 조회
-    public List<Site> getSiteList(Long folderId) {
-        
-        List<Site> siteList = folderRepository.findById(folderId)
-                .orElseThrow(
-                        () -> new RuntimeException("폴더에 등록 된 사이트가 없습니다!")
-                ).getSites();
-        log.warn("=================사이트 리스트 : {}", siteList);
-        return siteList;
+    public List<SiteResponseDTO> getSiteList(Long folderId) {
+        log.warn("folderId -> {}", folderId);
+        List<Site> siteList = siteRepository.findByFolderId(folderId);
+//        List<Site> siteList = queryFactory.selectFrom(site)
+//                .where(site.folder.id.eq(folderId))
+//                .fetch();
+//        List<Site> siteLists = folderRepository.findById(folderId)
+//                .orElseThrow(
+//                        () -> new RuntimeException("폴더에 등록 된 사이트가 없습니다!")
+//                ).getSites();
+        log.warn("=================siteList : {}", siteList);
+        List<SiteResponseDTO> responseDTOList = siteList.stream()
+                .map(site -> new SiteResponseDTO(site))
+                .collect(Collectors.toList());
+        log.warn("=================responseDTOList : {}", responseDTOList);
+        return responseDTOList;
     }
 
 

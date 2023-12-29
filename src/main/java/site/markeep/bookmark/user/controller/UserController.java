@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.PasswordUpdateRequestDTO;
 import site.markeep.bookmark.user.dto.response.LoginResponseDTO;
 import site.markeep.bookmark.user.dto.response.ProfileResponseDTO;
+import site.markeep.bookmark.user.entity.Role;
 import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.service.UserService;
 import site.markeep.bookmark.util.MailService;
@@ -38,6 +40,19 @@ public class UserController {
     private final MailService mailService;
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
+
+    @GetMapping("/status")
+    public ResponseEntity<?> testToken(
+            @RequestHeader("Authorization") String token
+    ){
+        boolean isExpired;
+        if(StringUtils.hasText(token) && token.startsWith("Bearer")){
+            isExpired = tokenProvider.isTokenExpired(token.substring(7)); //Bearer 다음의 문자열만을 추출하여 전달
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); //잘못된 토큰 형식의 경우 badRequest 응답
+        }
+        return ResponseEntity.ok(isExpired); //isExpired 값을 body에 담아서 전달
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto){

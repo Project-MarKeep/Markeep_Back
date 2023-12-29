@@ -53,7 +53,7 @@ public class FollowController {
         // 로그인 한 유저가 할 수 있는 행동이긴 하지만
         // 로그인 한 유저의 id값 = 똑같은 id값 -> 막기
         if(toId.equals(userInfo.getId())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         try {
