@@ -15,6 +15,7 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
 import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
@@ -34,7 +35,7 @@ public class FolderController {
     @GetMapping("/my")
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
-        List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
+        List<FolderWithTagsResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
     }
 
