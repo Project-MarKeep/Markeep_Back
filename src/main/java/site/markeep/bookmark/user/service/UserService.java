@@ -13,12 +13,16 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.NewRefreshToken;
 import site.markeep.bookmark.auth.TokenProvider;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.aws.S3Service;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
+import site.markeep.bookmark.user.dto.KakaoUserDTO;
+import site.markeep.bookmark.user.dto.SnsLoginDTO;
 import site.markeep.bookmark.user.dto.request.GoogleLoginRequestDTO;
 import site.markeep.bookmark.user.dto.request.JoinRequestDTO;
 import site.markeep.bookmark.user.dto.request.LoginRequestDTO;
@@ -37,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static site.markeep.bookmark.user.entity.QUser.user;
 
@@ -57,11 +62,23 @@ public class UserService {
     private final JPAQueryFactory queryFactory;
     private final EntityManager em;
     private final FollowRepository followRepository;
+    private final S3Service s3Service;
+
+
 
 
     @Value("${upload.path.profile}")
     private String uploadProfilePath;
 
+
+    @Value("${kakao.client_id}")
+    private String KAKAO_CLIENT_ID;
+
+    @Value("${kakao.client_secret}")
+    private String KAKAO_CLIENT_SECRET;
+
+    @Value("${kakao.redirect_uri")
+    private String KAKAO_REDIRECT_URI;
 
     @Value("${naver.client_id}")
     private String NAVER_CLIENT_ID;
@@ -114,17 +131,17 @@ public class UserService {
 
         userRefreshTokenRepository.findById(user.getId())
                 .ifPresentOrElse(
-            it -> it.updateRefreshToken(refreshToken),
-            () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
+                        it -> it.updateRefreshToken(refreshToken),
+                        () -> userRefreshTokenRepository.save(new NewRefreshToken(user, refreshToken))
                 );
         userRepository.save(User.builder()
-                        .id(user.getId())
-                        .password(encodedPassword)
-                        .nickname(user.getNickname())
-                        .email(dto.getEmail())
-                        .joinDate(user.getJoinDate())
-                        .autoLogin(dto.isAutoLogin())
-                        .refreshToken(refreshToken)
+                .id(user.getId())
+                .password(encodedPassword)
+                .nickname(user.getNickname())
+                .email(dto.getEmail())
+                .joinDate(user.getJoinDate())
+                .autoLogin(dto.isAutoLogin())
+                .refreshToken(refreshToken)
                 .build());
 
         // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
@@ -154,18 +171,22 @@ public class UserService {
     public boolean isDuplicate(String email) {
         return  userRepository.findByEmail(email).isPresent();
     }
-    
-    
+
+
     public void updatePassword(PasswordUpdateRequestDTO dto) {
         repoimpl.updatePassword(dto);
     }
-
-    public LoginResponseDTO naverLogin(final String code) {
-        Map<String, Object> responseData = getNaverAccessToken(code);
+    public LoginResponseDTO naverLogin(final SnsLoginDTO requestDTO) {
+        Map<String, Object> responseData = getNaverAccessToken(requestDTO.getCode());
         log.info("token: {}", responseData.get("access_token"));
 
 
         Map<String, String> userInfo = getNaverUserInfo(responseData.get("access_token"));
+
+        String refreshToken = null;
+
+        // 사용자가 자동 로그인 체크했을 경우
+        if(requestDTO.isAutoLogin()) refreshToken = tokenProvider.createRefreshToken();
 
         // 중복되지 않았을 경우
         if(!isDuplicate(userInfo.get("response/email"))){
@@ -173,6 +194,7 @@ public class UserService {
                             .email(userInfo.get("response/email"))
                             .password("password!")
                             .nickname(userInfo.get("response/nickname"))
+                            .refreshToken(refreshToken)
                             .build()
                     );
         }
@@ -181,16 +203,8 @@ public class UserService {
         User foundUser = userRepository.findByEmail(userInfo.get("response/email")).orElseThrow();
 
         String accessToken = tokenProvider.createAccessToken(foundUser);
-        String refreshToken = tokenProvider.createRefreshToken();
 
-        return LoginResponseDTO.builder()
-                .id(foundUser.getId())
-                .email(foundUser.getEmail())
-                .nickname(foundUser.getNickname())
-                .autoLogin(foundUser.isAutoLogin())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return new LoginResponseDTO(foundUser, accessToken, refreshToken);
 
     }
 
@@ -328,6 +342,66 @@ public class UserService {
         }
     }
 
+    public LoginResponseDTO kakaoService(SnsLoginDTO requestDTO) {
+
+        Map<String, Object> responseData = kakaoGetAccessToken(requestDTO.getCode());
+        String token = responseData.get("access_token").toString();
+        KakaoUserDTO responseDTO = getKakaoUserInfo(token);
+
+        String refreshToken = null;
+        if(requestDTO.isAutoLogin()) refreshToken = tokenProvider.createRefreshToken();
+
+
+
+        if(!isDuplicate(responseDTO.getKakaoAccount().getEmail())){
+            User saved = userRepository.save(responseDTO.toEntity(refreshToken));
+        }
+
+        User foundUser = userRepository.findByEmail(responseDTO.getKakaoAccount().getEmail()).orElseThrow();
+
+        String accessToken = tokenProvider.createAccessToken(foundUser);
+
+        return new LoginResponseDTO(foundUser, accessToken, refreshToken);
+    }
+
+    private KakaoUserDTO getKakaoUserInfo(String token) {
+        String requestUri = "https://kapi.kakao.com/v2/user/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        RestTemplate template = new RestTemplate();
+
+        ResponseEntity<KakaoUserDTO> responseEntity = template.exchange(requestUri, HttpMethod.GET, new HttpEntity<>(headers), KakaoUserDTO.class);
+
+        KakaoUserDTO responseData = responseEntity.getBody();
+
+        return responseData;
+
+    }
+
+    public Map<String, Object> kakaoGetAccessToken(String code) {
+        String requestUri = "https://kauth.kakao.com/oauth/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant-type", "authorization_code");
+        params.add("client_id", KAKAO_CLIENT_ID);
+        params.add("redirect_uri", KAKAO_REDIRECT_URI);
+        params.add("code", code);
+        params.add("client_secret", KAKAO_CLIENT_SECRET);
+
+        RestTemplate template = new RestTemplate();
+
+        ResponseEntity<Map> responseEntity = template.exchange(requestUri, HttpMethod.POST, new HttpEntity<>(headers, params), Map.class);
+
+        Map<String, Object> responseData = (Map<String, Object>) responseEntity.getBody();
+
+        return responseData;
+    }
     public boolean switchFollowBtn(TokenUserInfo userInfo) {
         log.warn("먼저 토큰 안에 id값 있는지부터 보까: {}",userInfo);
 
@@ -408,5 +482,38 @@ public class UserService {
                 return null;
         }
     }
+
+
+    /**
+     * 업로드 된 파일을 서버에 저장하고 저장 경로를 리턴.
+     *
+     * @param profileImg - 업로드 된 파일의 정보
+     * @return 실제로 저장된 이미지 경로
+     */
+    public String uploadProfileImage(MultipartFile profileImg) throws IOException {
+
+        // 파일명을 유니크하게 변경 (이름 충돌 가능성을 대비)
+        // UUID와 원본파일명을 혼합. -> 규칙은 없어요.
+        String uniqueFileName
+                = UUID.randomUUID() + "_" + profileImg.getOriginalFilename();
+
+        // 파일을 저장
+        //파일을 s3 버킷에 저장
+        return s3Service.uploadToS3Bucket(profileImg.getBytes(), uniqueFileName);
+
+    }
+
+
+    // 프로필 사진 등록
+    public int create(Long id, String uploadedFilePath) {
+        return userRepository.modifyProfileImage(uploadedFilePath,id);
+
+    }
+
+    public int modifyNickname(Long id, String nickname) {
+        return userRepository.modifyNickname(nickname, id);
+    }
+
+
 }
 

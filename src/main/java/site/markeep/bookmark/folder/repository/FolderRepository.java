@@ -21,7 +21,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
     @Query("SELECT count(p) as pincount FROM Pin p WHERE p.folder.id = :folderId")
     int countPinsByFolderId(@Param("folderId") Long folderId);
 
-    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
+//    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
 
     @Query(value = "SELECT user_id FROM Folder WHERE folder_id = :folderId", nativeQuery = true)
     Long getFolderUser(@Param("folderId") Long folderId);

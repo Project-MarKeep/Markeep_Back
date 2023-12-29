@@ -1,6 +1,7 @@
 package site.markeep.bookmark.site.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import site.markeep.bookmark.folder.entity.Folder;
@@ -10,7 +11,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
-@ToString
+@ToString(exclude = "folder")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor

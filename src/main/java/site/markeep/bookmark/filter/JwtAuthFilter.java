@@ -1,7 +1,9 @@
 package site.markeep.bookmark.filter;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,7 +38,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 먼저 헤더에서 토큰에서 타입이 붙은 풀 토큰값을 꺼내준다
         try {
             String token = parseBearToken(request);
-
             if(token != null){
 
                 // 순수 토큰에서 필요한 유저 정보를 TokenUserInfo 객체에 담아준다.
@@ -64,8 +65,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             e.printStackTrace();
             log.warn("토큰 서명이 위조되었습니다! 비상! 비상! 해피해킹! 비상뵤!");
+            return;
         }
-        
+
         filterChain.doFilter(request, response);
         log.info("!!!!!!!!!!!토큰이 필터를 지나감!!!!!!!!!!!");
     }
