@@ -14,10 +14,11 @@ import org.springframework.http.ResponseEntity;
 public class ProfileResponseDTO {
     private String nickname;
     private String email;
+    private String profileImage;
     private int followerCount;
     private int followingCount;
-    private HttpHeaders headers;
-    private byte[] fileData;
+//    private HttpHeaders headers;
+//    private byte[] fileData;
 
 
 }

@@ -21,7 +21,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
     @Query("SELECT count(p) as pincount FROM Pin p WHERE p.folder.id = :folderId")
     int countPinsByFolderId(@Param("folderId") Long folderId);
 
-//    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, String[] keywords);
+//    Page<Folder> findAllOrderByPinCountkeywords(Pageable pageable, String[] keywords);
 
     @Query(value = "SELECT user_id FROM Folder WHERE folder_id = :folderId", nativeQuery = true)
     Long getFolderUser(@Param("folderId") Long folderId);
@@ -29,8 +29,8 @@ public interface FolderRepository extends JpaRepository<Folder, Long> , FolderRe
 //    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p " +
 //            "WHERE (:keywords IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keywords[%d], '%'))) " +
 //            "GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
-//        Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, @Param("keyWords") String[] keyWords);
-//    Page<Folder> findAllOrderByPinCountKeyWords(Pageable pageable, @Param("keyWords") String keyWords);
+//        Page<Folder> findAllOrderByPinCountkeywords(Pageable pageable, @Param("keywords") String[] keywords);
+//    Page<Folder> findAllOrderByPinCountkeywords(Pageable pageable, @Param("keywords") String keywords);
 
 //    @Query("SELECT f FROM Folder f LEFT JOIN f.pins p GROUP BY f ORDER BY COUNT(p) DESC, f.createDate DESC")
 //    Page<Folder> findAllOrderByPinCountDesc(Pageable pageable);
