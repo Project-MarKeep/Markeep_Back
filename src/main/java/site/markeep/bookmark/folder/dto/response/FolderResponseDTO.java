@@ -2,7 +2,11 @@ package site.markeep.bookmark.folder.dto.response;
 
 import lombok.*;
 import site.markeep.bookmark.folder.entity.Folder;
+import site.markeep.bookmark.tag.entity.Tag;
 import site.markeep.bookmark.user.entity.User;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Setter @Getter
 @ToString @EqualsAndHashCode
@@ -21,6 +25,7 @@ public class FolderResponseDTO {
 
     private int followFlag;
     private int pinCount;
+    private List<String> tagNames;
 
 
     public FolderResponseDTO(Folder folder) {
@@ -32,6 +37,8 @@ public class FolderResponseDTO {
         this.profileImage = folder.getUser().getProfileImage();
         this.hideFlag = folder.isHideFlag();
         this.pinCount = folder.getPins().size();
-
+        this.tagNames = folder.getTags().stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.toList());
     }
 }

@@ -16,12 +16,8 @@ import java.util.stream.Collectors;
 public class FolderWithTagsResponseDTO {
 
     private FolderResponseDTO folder;
-    private List<String> tagNames;
 
     public FolderWithTagsResponseDTO(Folder folder) {
         this.folder = new FolderResponseDTO(folder);
-        this.tagNames = folder.getTags().stream()
-                .map(Tag::getTagName)
-                .collect(Collectors.toList());
     }
 }

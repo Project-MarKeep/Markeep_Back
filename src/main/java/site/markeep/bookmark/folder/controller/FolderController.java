@@ -38,6 +38,7 @@ public class FolderController {
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
         List<FolderWithTagsResponseDTO> folderList = folderService.retrieve(userInfo.getId());
+        log.warn(folderList.toString());
         return ResponseEntity.ok().body(folderList);
     }
 
