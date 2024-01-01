@@ -1,5 +1,7 @@
 package site.markeep.bookmark.folder.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -20,6 +22,7 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.pinn.entity.QPin;
 import site.markeep.bookmark.pinn.repository.PinRepository;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
@@ -37,6 +40,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static site.markeep.bookmark.pinn.entity.QPin.pin;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,11 +56,10 @@ public class FolderService {
     private final S3Service s3Service;
     private final FollowRepository followRepository;
     private BufferedOutputStream entityManager;
+    private JPAQueryFactory queryFactory;
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
-
-
 
     public List<FolderWithTagsResponseDTO> retrieve(Long userId) {
         User user = getUser(userId);
@@ -203,8 +207,9 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyword,Long userId) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyword, Long userId) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+//        log.warn("keywords -> {}",keyword);
         String[] keywords = keyword.split("\\s+");
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountkeywords(pageable, keywords);
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
@@ -224,6 +229,7 @@ public class FolderService {
                         .profileImage(foundUser.getProfileImage())
                         .title(folder.getTitle())
                         .pinCount(folder.getPins().size())
+                        .pinFlag(folder.isPinFlag())
                         .followFlag((userId != null) ? followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId()) : 0)
                         .build();
 
@@ -235,7 +241,6 @@ public class FolderService {
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
                 .list(listResponseDTO)
                 .build();
-
     }
 
     /*****************************************************
@@ -277,6 +282,13 @@ public class FolderService {
 //        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
         pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
+//        queryFactory.selectFrom(pin)
+//                .where()
+        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
+                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
+                .exists();
+
+
         //닉 네임
 
 
@@ -294,9 +306,9 @@ public class FolderService {
         FolderResponseDTO folderResponseDTO = new FolderResponseDTO(folderNew);
         folderResponseDTO.setNickname(user.getNickname());
         folderResponseDTO.setProfileImage(user.getProfileImage());
-
-
-        return  folderResponseDTO;
+        folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
+        
+        return folderResponseDTO;
     }
 
     //기존의 이미지 파일을 복사, 새로운 url 을 부여 한다.

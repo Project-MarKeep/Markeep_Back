@@ -18,7 +18,7 @@ public class FolderResponseDTO {
     private String folderImg;
     private String profileImage;
     private boolean hideFlag;
-
+    private boolean pinFlag;
     private int followFlag;
     private int pinCount;
 
@@ -31,6 +31,7 @@ public class FolderResponseDTO {
         this.folderImg = folder.getFolderImg();
         this.profileImage = folder.getUser().getProfileImage();
         this.hideFlag = folder.isHideFlag();
+        this.pinFlag = folder.isPinFlag();
         this.pinCount = folder.getPins().size();
 
     }

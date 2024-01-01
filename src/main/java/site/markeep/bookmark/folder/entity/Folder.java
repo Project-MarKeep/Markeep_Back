@@ -50,6 +50,9 @@ public class Folder {
     @JsonBackReference
     private User user;
 
+    @ColumnDefault("false")
+    private boolean pinFlag;
+
     @OneToMany(mappedBy = "folder",cascade = CascadeType.REMOVE)
     @Builder.Default
     @JsonManagedReference
