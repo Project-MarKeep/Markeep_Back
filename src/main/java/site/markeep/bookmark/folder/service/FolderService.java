@@ -41,10 +41,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-<<<<<<< HEAD
-=======
-import static site.markeep.bookmark.follow.entity.QFollow.follow;
->>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
 import static site.markeep.bookmark.pinn.entity.QPin.pin;
 
 @Service
@@ -289,21 +285,9 @@ public class FolderService {
 //        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
         pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
-<<<<<<< HEAD
         BooleanExpression pinFlag = queryFactory.selectFrom(pin)
                 .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
                 .exists();
-=======
-//        queryFactory.selectFrom(pin)
-//                .where()
-        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
-                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
-                .exists();
-
-
-        //닉 네임
-
->>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
@@ -321,11 +305,7 @@ public class FolderService {
         folderResponseDTO.setNickname(user.getNickname());
         folderResponseDTO.setProfileImage(user.getProfileImage());
         folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
+     
         return folderResponseDTO;
     }
 
