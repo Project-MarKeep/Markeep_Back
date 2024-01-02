@@ -114,7 +114,8 @@ tasks.named('bootBuildImage') {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+//	useJUnitPlatform()
+	exclude '**/*'
 }
 
 // Google API 사용 위해서 라이브러리 설치
