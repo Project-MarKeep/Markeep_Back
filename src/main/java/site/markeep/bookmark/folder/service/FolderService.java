@@ -20,6 +20,7 @@ import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
 import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.follow.entity.QFollow;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.pinn.entity.QPin;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static site.markeep.bookmark.follow.entity.QFollow.follow;
 import static site.markeep.bookmark.pinn.entity.QPin.pin;
 
 @Service
@@ -221,7 +223,9 @@ public class FolderService {
         for (Folder folder : folders) {
             User foundUser = userRepository.findById(folder.getUser().getId()).orElseThrow();
 
-            FolderResponseDTO responseDTO = FolderResponseDTO.builder()
+            int followFlag = followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId());
+
+                FolderResponseDTO responseDTO = FolderResponseDTO.builder()
                         .id(folder.getId())
                         .userId(foundUser.getId())
                         .nickname(foundUser.getNickname())
@@ -230,7 +234,7 @@ public class FolderService {
                         .title(folder.getTitle())
                         .pinCount(folder.getPins().size())
                         .pinFlag(folder.isPinFlag())
-                        .followFlag((userId != null) ? followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId()) : 0)
+                        .followFlag((userId == null) ? 0 : followFlag)
                         .build();
 
             listResponseDTO.add(responseDTO);
