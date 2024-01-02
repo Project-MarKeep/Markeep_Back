@@ -1,5 +1,6 @@
 package site.markeep.bookmark.follow.controller;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,16 +38,17 @@ public class FollowController {
             Long toId
     ){
 
-//        log.warn("[CONTROLLER] - follow");
-//        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ userInfo : {}",userInfo);
-//        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ toId : {}", toId);
+        log.warn("[CONTROLLER] - follow");
+        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ userInfo : {}",userInfo);
+        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ toId : {}", toId);
 
 //        log.warn("tokenUserInfo의 id 값이 로그인 한 유저의 id 값아님?>?? : {}", id);
 
-        Follow followResult = queryFactory.selectFrom(follow)
+        Follow followRes = queryFactory.selectFrom(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
-                .fetchFirst();
-        log.warn("일단 select되는지 확인: {}", followResult);
+                .fetchOne();
+//        log.warn("followFlag boolean타입: {}", followFlag.isTrue());
+//        log.warn("followFlag boolean타입: {}", followFlag.isFalse());
 //        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
 //        log.warn("쿼리 메서드 결과 : {}", followRelationship);
 
@@ -55,13 +57,16 @@ public class FollowController {
         if(toId.equals(userInfo.getId())){
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+        log.warn("찾은 결과 값 -> {}",followRes);
 
         try {
             // 1. follow / unfollow 구별하기 -> flag 느낌
-            if(followResult == null){
+            if(followRes == null){
+                log.warn("팔로우임");
                 followService.follow(userInfo, toId);
                 return ResponseEntity.status(HttpStatus.OK).build();
             } else {
+                log.warn("언팔로우임");
                 followService.deleteFollow(userInfo, toId);
                 return ResponseEntity.status(HttpStatus.OK).build();
             }

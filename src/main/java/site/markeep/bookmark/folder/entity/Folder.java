@@ -1,7 +1,9 @@
 package site.markeep.bookmark.folder.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,6 +25,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Folder {
 
     @Id
@@ -47,12 +50,17 @@ public class Folder {
     @JsonBackReference
     private User user;
 
-    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @ColumnDefault("false")
+    private boolean pinFlag;
+
+    @OneToMany(mappedBy = "folder",cascade = CascadeType.REMOVE)
     @Builder.Default
+    @JsonManagedReference
     private List<Tag> tags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "folder",orphanRemoval = true)
+    @OneToMany(mappedBy = "folder",cascade = CascadeType.REMOVE)
     @Builder.Default
+    @JsonManagedReference
     private List<Pin> pins = new ArrayList<>();
 
     @OneToMany(mappedBy = "folder",orphanRemoval = true)
@@ -71,9 +79,29 @@ public class Folder {
         }
     }
     
-    public void update(FolderUpdateRequestDTO dto){
-        this.title = dto.getTitle();
-        this.tags = dto.getTags();
-        this.hideFlag = dto.isHideFlag();
-    }
+//    public void update(FolderUpdateRequestDTO dto){
+//        this.title = dto.getTitle();
+//        this.hideFlag = dto.isHideFlag();
+//
+//        // 기존 태그들 제거
+////        this.tags.clear();
+//
+//        // 새로운 태그들 추가
+////        for (String tagName : dto.getTags()) {
+////            Tag tag = new Tag();
+////            tag.setTagName(tagName);
+////            tag.setFolder(this);
+////            this.tags.add(tag);
+////        }
+//    }
+
+//    @PreRemove
+//    private void preRemove() {
+//        for (Pin pin : pins) {
+//            if (pin.getNewFolder() != null) {
+//                pin.setNewFolder(null);
+//            }
+//        }
+//    }
+
 }

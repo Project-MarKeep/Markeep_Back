@@ -2,6 +2,7 @@ package site.markeep.bookmark.folder.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,8 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
+import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.service.FolderService;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 
@@ -34,7 +37,7 @@ public class FolderController {
     @GetMapping("/my")
     public ResponseEntity<?> getList(@AuthenticationPrincipal TokenUserInfo userInfo) {
         log.info("/folders/my - GET 요청! {},", userInfo);
-        List<FolderResponseDTO> folderList = folderService.retrieve(userInfo.getId());
+        List<FolderWithTagsResponseDTO> folderList = folderService.retrieve(userInfo.getId());
         return ResponseEntity.ok().body(folderList);
     }
 
@@ -51,21 +54,33 @@ public class FolderController {
 
 
     // 폴더 정보 업데이트 시켜주는 메서드
-    @PatchMapping("/my")
+    @PutMapping(value = "/my")
     public ResponseEntity<?> update(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
-        log.info("/folders/my - PATCH 요청! - {}", dto);
-        List<FolderResponseDTO> updatedList = folderService.update(dto);
+        log.info("/folders/my - PATCH 요청!!!!!!!!!!!!!!! - {}", dto);
+        try {
+            List<MyFolderResponseDTO> updatedList = folderService.update(dto,userInfo.getId());
+            return  ResponseEntity.ok().body(updatedList);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
 
-        return ResponseEntity.ok().body(updatedList);
     }
 
     //폴더 삭제 요청
     @DeleteMapping("/my/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long folderId) {
-        folderService.delete(folderId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @PathVariable("id") Long folderId) {
+        try {
+            folderService.delete(folderId,userInfo.getId());
+            return ResponseEntity.ok().body("정상 삭제 되었습니다.");
+        } catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        
     }
     
     /*****************************************************
@@ -112,10 +127,10 @@ public class FolderController {
      @GetMapping("/all")
     public ResponseEntity<?> getFolderAllList(
              PageDTO dto,
-             String keyWord
+             String keyword
      ) {
 
-         log.warn("/folders/all - GET 요청 !! keyWord: {} ", keyWord);
+         log.warn("/folders/all - GET 요청 !! keyword: {} ", keyword);
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             TokenUserInfo userInfo = null;
@@ -124,7 +139,7 @@ public class FolderController {
                 userInfo = (TokenUserInfo) authentication.getPrincipal();
             }
 
-            FolderListResponseDTO list = folderService.getList(dto, keyWord, userInfo != null ? userInfo.getId() : null);
+            FolderListResponseDTO list = folderService.getList(dto, keyword, userInfo != null ? userInfo.getId() : null);
             return ResponseEntity.ok().body(list);
         } catch (StackOverflowError e){
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -153,6 +168,7 @@ public class FolderController {
                     .badRequest()
                     .body("미가입 회원입니다.");
         }
+
         try {
             FolderResponseDTO folderResponseDTO =  folderService.addFolderPin(userInfo.getId(), Long.valueOf(folderId));
             return  ResponseEntity.ok().body(folderResponseDTO);
@@ -160,7 +176,6 @@ public class FolderController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
-
     }
 
 }

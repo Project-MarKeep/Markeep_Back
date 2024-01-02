@@ -6,10 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.markeep.bookmark.auth.TokenUserInfo;
+import site.markeep.bookmark.folder.entity.Folder;
+import site.markeep.bookmark.folder.entity.QFolder;
+import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.entity.Follow;
 import site.markeep.bookmark.follow.entity.FollowId;
 import site.markeep.bookmark.follow.repository.FollowRepository;
+import site.markeep.bookmark.user.entity.User;
+import site.markeep.bookmark.user.repository.UserRepository;
 
+import java.util.Optional;
+
+import static site.markeep.bookmark.folder.entity.QFolder.folder;
 import static site.markeep.bookmark.follow.entity.QFollow.follow;
 
 @Service
@@ -19,12 +27,13 @@ import static site.markeep.bookmark.follow.entity.QFollow.follow;
 public class FollowService {
 
     private final FollowRepository followRepository;
+    private final FolderRepository folderRepository;
     private final JPAQueryFactory queryFactory;
 
     public void follow(TokenUserInfo userInfo, Long toId) {
 
         // 팔로 정보 저장
-        Follow saved = followRepository.save(
+        Follow followSaved = followRepository.save(
                 Follow.builder()
                         .id(
                                 FollowId.builder()
@@ -34,6 +43,11 @@ public class FollowService {
                         )
                         .build()
         );
+        Folder foundFolder = folderRepository.findById(userInfo.getId())
+                .orElseThrow(() -> new RuntimeException());
+//        queryFactory.update(folder)
+//                .where(folder.id.eq(userInfo.getId()))
+//                .set()
 //        log.warn("[SERVICE] - saved 된 내용 좀 보까 ㅋㅋ; : {}", saved);
     }
     /*
@@ -44,10 +58,17 @@ public class FollowService {
      */
     public void deleteFollow(TokenUserInfo userInfo, Long toId) {
 
-        // 팔로 정보 삭제
-        queryFactory.delete(follow)
+        long execute = queryFactory.delete(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
                 .execute();
+        log.warn("delete 결과 -> {}",execute);
+
+        // 팔로 정보 삭제
+//        followRepository.
+//                .build())
+//                .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
+//                .execute();
+//        log.warn("팔로 정보 삭제 -> {}",deleteFollowInfo);
 //        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
 //        log.warn("쿼리 메서드 결과 : {}", followRelationship);
 

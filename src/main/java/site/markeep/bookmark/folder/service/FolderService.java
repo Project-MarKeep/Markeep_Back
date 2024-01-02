@@ -1,5 +1,7 @@
 package site.markeep.bookmark.folder.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -14,10 +16,14 @@ import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
+import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
+import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.follow.entity.QFollow;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.pinn.entity.QPin;
 import site.markeep.bookmark.pinn.repository.PinRepository;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
@@ -28,16 +34,20 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.util.dto.page.PageDTO;
 import site.markeep.bookmark.util.dto.page.PageResponseDTO;
 
+import javax.transaction.Transactional;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static site.markeep.bookmark.follow.entity.QFollow.follow;
+import static site.markeep.bookmark.pinn.entity.QPin.pin;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class FolderService {
 
     private final FolderRepository folderRepository;
@@ -47,32 +57,32 @@ public class FolderService {
     private final PinRepository pinRepository;
     private final S3Service s3Service;
     private final FollowRepository followRepository;
-
+    private BufferedOutputStream entityManager;
+    private JPAQueryFactory queryFactory;
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
 
-
-    public List<FolderResponseDTO> retrieve(Long userId) {
+    public List<FolderWithTagsResponseDTO> retrieve(Long userId) {
         User user = getUser(userId);
         List<Folder> folderList = user.getFolders();
         log.warn("user - {}",user);
 
-        List<FolderResponseDTO> dtoList = folderList.stream()
-                .map(FolderResponseDTO::new)
+        List<FolderWithTagsResponseDTO> dtoList = folderList.stream()
+                .map(FolderWithTagsResponseDTO::new)
                 .collect(Collectors.toList());
 
         return dtoList;
     }
+
 
     public FolderListResponseDTO searchMyList(PageDTO dto, Long userId, String keyword) {
         log.warn(keyword);
         String[] keywords = keyword.split("\\s+");
         log.warn(keywords.toString());
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-        Page<Folder> folderPage = folderRepository.findAllByKeywords(pageable, userId, keywords);
+        Page<Folder> folderPage = folderRepository.findAllBykeywords(pageable, userId, keywords);
         List<Folder> folderList = folderPage.getContent();
-
 
 
         List<FolderResponseDTO> dtoList = folderList.stream()
@@ -84,6 +94,20 @@ public class FolderService {
                 .pageInfo(new PageResponseDTO(folderPage))
                 .list(dtoList)
                 .build();
+
+    }
+
+    public List<MyFolderResponseDTO> myRetrieve(Long userId) {
+        User user = getUser(userId);
+        List<Folder> folderList = user.getFolders();
+        log.warn("user - {}",user);
+
+        List<MyFolderResponseDTO> dtoList = folderList.stream()
+                .map(MyFolderResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return dtoList;
+
     }
 
     private User getUser(Long userId) {
@@ -92,21 +116,63 @@ public class FolderService {
         );
     }
 
-    public List<FolderResponseDTO> update(FolderUpdateRequestDTO dto) {
+    public List<MyFolderResponseDTO> update(FolderUpdateRequestDTO dto,Long userId) {
         Folder foundFolder = folderRepository.findById(dto.getFolderId()).orElseThrow(
                 () -> new RuntimeException("존재하지 않는 폴더입니다.")
         );
-        foundFolder.update(dto);
-        Folder saved = folderRepository.save(foundFolder);
-        return retrieve(saved.getUser().getId());
+        if(!Objects.equals(userId, foundFolder.getUser().getId())){
+            throw new RuntimeException("user 폴더가 아닙니다.");
+        }
+
+
+        foundFolder.getTags().clear();
+        foundFolder.setTitle(dto.getTitle());
+        foundFolder.setHideFlag(dto.isHideFlag());
+
+
+        Folder saved;
+        try {
+            saved = folderRepository.save(foundFolder); // 여기서 폴더가 수정될때, tag 가 삭제가 안된다.
+            int deleteCount = tagRepository.deleteTagsByFolderId(saved.getId()); // TAG강제 삭제
+
+            // folder 수정이 정상이라면 tag insert
+            List<Tag> tagList = new ArrayList<>();
+            if(dto.getTags() != null) {
+                for (String tag : dto.getTags()) {
+                    if (tag == null) break;
+                    Tag savedTag = tagRepository.save(Tag.builder()
+                            .folder(foundFolder)
+                            .tagName(tag)
+                            .build());
+                    saved.addTag(savedTag);
+                    tagList.add(savedTag); //저장된 태그를 리스트에 추가. 혹시 나중에 쓸까 싶어 일단 정보를 담는다
+
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("폴더 수정에 실패했습니다.");
+        }
+
+        return myRetrieve(saved.getUser().getId());
 
     }
 
-    public void delete(Long folderId) {
+
+    public void delete(Long folderId, Long userId) {
+        Folder foundFolder = folderRepository.findById(folderId).orElseThrow(
+                () -> new RuntimeException("존재하지 않는 폴더입니다.")
+        );
+        Folder folder = folderRepository.findById(folderId).orElse(null);
+        if(!Objects.equals(userId, foundFolder.getUser().getId())){
+            throw new RuntimeException("user 폴더가 아닙니다.");
+        }
+
         try {
             folderRepository.deleteById(folderId);
         } catch (Exception e) {
             log.warn("id가 존재하지 않아 폴더 삭제에 실패했습니다. - ID: {}, err: {}", folderId, e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("id가 존재하지 않아 폴더 삭제에 실패했습니다.");
         }
     }
@@ -143,10 +209,11 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyWord,Long userId) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyword, Long userId) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
-        String[] keyWords = keyWord.split("\\s+");
-        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountKeyWords(pageable, keyWords);
+//        log.warn("keywords -> {}",keyword);
+        String[] keywords = keyword.split("\\s+");
+        Page<Folder> folderPage = folderRepository.findAllOrderByPinCountkeywords(pageable, keywords);
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
         long totalElements = folderPage.getTotalElements(); // 전체 데이터의 갯수
         int totalPages = folderPage.getTotalPages(); // 전체 페이지 수
@@ -156,7 +223,9 @@ public class FolderService {
         for (Folder folder : folders) {
             User foundUser = userRepository.findById(folder.getUser().getId()).orElseThrow();
 
-            FolderResponseDTO responseDTO = FolderResponseDTO.builder()
+            int followFlag = followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId());
+
+                FolderResponseDTO responseDTO = FolderResponseDTO.builder()
                         .id(folder.getId())
                         .userId(foundUser.getId())
                         .nickname(foundUser.getNickname())
@@ -164,7 +233,8 @@ public class FolderService {
                         .profileImage(foundUser.getProfileImage())
                         .title(folder.getTitle())
                         .pinCount(folder.getPins().size())
-                        .followFlag((userId != null) ? followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId()) : 0)
+                        .pinFlag(folder.isPinFlag())
+                        .followFlag((userId == null) ? 0 : followFlag)
                         .build();
 
             listResponseDTO.add(responseDTO);
@@ -175,7 +245,6 @@ public class FolderService {
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
                 .list(listResponseDTO)
                 .build();
-
     }
 
     /*****************************************************
@@ -192,6 +261,7 @@ public class FolderService {
                 );
 
         User user = getUser(userId);
+
         //Folder , Site , Pin 생성
         AddFolderRequestDTO dto =  AddFolderRequestDTO.builder()
                 .title(folder.getTitle())
@@ -213,7 +283,18 @@ public class FolderService {
 
         //핀 생성
 //        pinRepository.save(Pin.builder().folder(folder).user(user).build());
-        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
+//        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
+        pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
+
+//        queryFactory.selectFrom(pin)
+//                .where()
+        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
+                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
+                .exists();
+
+
+        //닉 네임
+
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
@@ -226,7 +307,12 @@ public class FolderService {
                     .build());
         }
 
-        return  new FolderResponseDTO(folderNew);
+        FolderResponseDTO folderResponseDTO = new FolderResponseDTO(folderNew);
+        folderResponseDTO.setNickname(user.getNickname());
+        folderResponseDTO.setProfileImage(user.getProfileImage());
+        folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
+        
+        return folderResponseDTO;
     }
 
     //기존의 이미지 파일을 복사, 새로운 url 을 부여 한다.
