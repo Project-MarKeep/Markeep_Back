@@ -43,10 +43,11 @@ public class FollowController {
 
 //        log.warn("tokenUserInfo의 id 값이 로그인 한 유저의 id 값아님?>?? : {}", id);
 
-        Follow followResult = queryFactory.selectFrom(follow)
+        Follow followRes = queryFactory.selectFrom(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
-                .fetchFirst();
-        log.warn("일단 select되는지 확인: {}", followResult);
+                .fetchOne();
+//        log.warn("followFlag boolean타입: {}", followFlag.isTrue());
+//        log.warn("followFlag boolean타입: {}", followFlag.isFalse());
 //        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
 //        log.warn("쿼리 메서드 결과 : {}", followRelationship);
 
@@ -58,7 +59,7 @@ public class FollowController {
 
         try {
             // 1. follow / unfollow 구별하기 -> flag 느낌
-            if(followResult == null){
+            if(followRes == null){
                 followService.follow(userInfo, toId);
                 return ResponseEntity.status(HttpStatus.OK).build();
             } else {

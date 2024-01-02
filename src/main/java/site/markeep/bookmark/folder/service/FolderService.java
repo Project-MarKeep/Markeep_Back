@@ -20,6 +20,7 @@ import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
 import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
+import site.markeep.bookmark.follow.entity.QFollow;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
 import site.markeep.bookmark.pinn.entity.QPin;
@@ -40,6 +41,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+<<<<<<< HEAD
+=======
+import static site.markeep.bookmark.follow.entity.QFollow.follow;
+>>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
 import static site.markeep.bookmark.pinn.entity.QPin.pin;
 
 @Service
@@ -60,8 +65,6 @@ public class FolderService {
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
-
-
 
     public List<FolderWithTagsResponseDTO> retrieve(Long userId) {
         User user = getUser(userId);
@@ -209,8 +212,9 @@ public class FolderService {
 
 
     //폴더 전체 목록 조회
-    public FolderListResponseDTO getList(PageDTO dto , String keyword,Long userId) {
+    public FolderListResponseDTO getList(PageDTO dto , String keyword, Long userId) {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getSize());
+//        log.warn("keywords -> {}",keyword);
         String[] keywords = keyword.split("\\s+");
         Page<Folder> folderPage = folderRepository.findAllOrderByPinCountkeywords(pageable, keywords);
         List<Folder> folders = folderPage.getContent(); // 현재 페이지의 데이터
@@ -222,7 +226,9 @@ public class FolderService {
         for (Folder folder : folders) {
             User foundUser = userRepository.findById(folder.getUser().getId()).orElseThrow();
 
-            FolderResponseDTO responseDTO = FolderResponseDTO.builder()
+            int followFlag = followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId());
+
+                FolderResponseDTO responseDTO = FolderResponseDTO.builder()
                         .id(folder.getId())
                         .userId(foundUser.getId())
                         .nickname(foundUser.getNickname())
@@ -230,7 +236,8 @@ public class FolderService {
                         .profileImage(foundUser.getProfileImage())
                         .title(folder.getTitle())
                         .pinCount(folder.getPins().size())
-                        .followFlag((userId != null) ? followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId()) : 0)
+                        .pinFlag(folder.isPinFlag())
+                        .followFlag((userId == null) ? 0 : followFlag)
                         .build();
 
             listResponseDTO.add(responseDTO);
@@ -241,7 +248,6 @@ public class FolderService {
                 .pageInfo(new PageResponseDTO(folderPage)) //페이지 정보가 담긴 객체를  dto 에게 전달해서 그쪽에서 처리하게 함
                 .list(listResponseDTO)
                 .build();
-
     }
 
     /*****************************************************
@@ -283,9 +289,21 @@ public class FolderService {
 //        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
         pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
+<<<<<<< HEAD
         BooleanExpression pinFlag = queryFactory.selectFrom(pin)
                 .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
                 .exists();
+=======
+//        queryFactory.selectFrom(pin)
+//                .where()
+        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
+                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
+                .exists();
+
+
+        //닉 네임
+
+>>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
@@ -303,7 +321,11 @@ public class FolderService {
         folderResponseDTO.setNickname(user.getNickname());
         folderResponseDTO.setProfileImage(user.getProfileImage());
         folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 03d1b973380317283bc7f2004d8500a87371bcd9
         return folderResponseDTO;
     }
 

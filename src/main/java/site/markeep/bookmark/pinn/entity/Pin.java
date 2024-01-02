@@ -33,13 +33,14 @@ public class Pin {
     @JsonBackReference
     private Folder folder;
 
+    @Column(nullable = false)
+    private Long newFolderId;
+
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "new_folder_id")
 //    @JsonBackReference
 //    private Folder newFolder;
 
-    @Column(nullable = false)
-    private Long newFolderId;
 
 //    @ManyToOne
 //    @JoinColumn(name = "user_id")
