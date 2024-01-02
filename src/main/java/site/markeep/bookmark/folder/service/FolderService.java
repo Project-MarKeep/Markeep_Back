@@ -1,5 +1,7 @@
 package site.markeep.bookmark.folder.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -20,6 +22,7 @@ import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
+import site.markeep.bookmark.pinn.entity.QPin;
 import site.markeep.bookmark.pinn.repository.PinRepository;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
@@ -37,6 +40,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static site.markeep.bookmark.pinn.entity.QPin.pin;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,6 +56,7 @@ public class FolderService {
     private final S3Service s3Service;
     private final FollowRepository followRepository;
     private BufferedOutputStream entityManager;
+    private JPAQueryFactory queryFactory;
 
     @Value("${upload.path.folder}")
     private String uploadRootPath;
@@ -248,7 +254,7 @@ public class FolderService {
     public FolderResponseDTO addFolderPin(Long userId, Long folderId) throws Exception {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(
-                        () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요 ")
+                        () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요")
                 );
 
         User user = getUser(userId);
@@ -277,8 +283,9 @@ public class FolderService {
 //        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
         pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
-        //닉 네임
-
+        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
+                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
+                .exists();
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
@@ -289,14 +296,15 @@ public class FolderService {
                     .comment(site.getComment())
                     .folder(folderNew)
                     .build());
+
         }
 
         FolderResponseDTO folderResponseDTO = new FolderResponseDTO(folderNew);
         folderResponseDTO.setNickname(user.getNickname());
         folderResponseDTO.setProfileImage(user.getProfileImage());
+        folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
 
-
-        return  folderResponseDTO;
+        return folderResponseDTO;
     }
 
     //기존의 이미지 파일을 복사, 새로운 url 을 부여 한다.

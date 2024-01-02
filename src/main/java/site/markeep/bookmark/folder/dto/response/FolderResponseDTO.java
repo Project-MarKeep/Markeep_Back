@@ -22,7 +22,7 @@ public class FolderResponseDTO {
     private String folderImg;
     private String profileImage;
     private boolean hideFlag;
-
+    private boolean pinFlag;
     private int followFlag;
     private int pinCount;
     private List<String> tagNames;

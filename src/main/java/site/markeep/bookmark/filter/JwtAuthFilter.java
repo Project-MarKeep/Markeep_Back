@@ -38,14 +38,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // 먼저 헤더에서 토큰에서 타입이 붙은 풀 토큰값을 꺼내준다
         try {
             String token = parseBearToken(request);
-            if(token != null){
-
-                // 순수 토큰에서 필요한 유저 정보를 TokenUserInfo 객체에 담아준다.
+            if(token != null && !token.equals("null")){
+            // 순수 토큰에서 필요한 유저 정보를 TokenUserInfo 객체에 담아준다.
                 TokenUserInfo userInfo = tokenProvider.validateAndGetTokenUserInfo(token);
 
                 // 회원 권한 주기 위해서 먼저 List<?>를 선언
                 List<SimpleGrantedAuthority> authorityList = new ArrayList<>();
                 // 스프링 시큐리티컨테이너에 넣어 줄 권한 회원들의 권한 정보! (그냥 유저임을 알려줌)
+                log.warn("userInfo에서 ROLE 확인 -> {}",userInfo.getRole().toString());
                 authorityList.add(new SimpleGrantedAuthority("ROLE_" + userInfo.getRole().toString()));
 
                 // 인증 처리

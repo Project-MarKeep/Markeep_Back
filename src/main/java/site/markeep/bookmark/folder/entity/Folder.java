@@ -45,6 +45,9 @@ public class Folder {
 
     private String folderImg;
 
+    @ColumnDefault("false")
+    private boolean pinFlag;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     @JsonBackReference
