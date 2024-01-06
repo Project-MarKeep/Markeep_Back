@@ -1,6 +1,5 @@
 package site.markeep.bookmark.folder.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +19,8 @@ import site.markeep.bookmark.folder.dto.response.FolderWithTagsResponseDTO;
 import site.markeep.bookmark.folder.dto.response.MyFolderResponseDTO;
 import site.markeep.bookmark.folder.entity.Folder;
 import site.markeep.bookmark.folder.repository.FolderRepository;
-import site.markeep.bookmark.follow.entity.QFollow;
 import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.pinn.entity.Pin;
-import site.markeep.bookmark.pinn.entity.QPin;
 import site.markeep.bookmark.pinn.repository.PinRepository;
 import site.markeep.bookmark.site.entity.Site;
 import site.markeep.bookmark.site.repository.SiteRepository;
@@ -38,10 +35,11 @@ import javax.transaction.Transactional;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static site.markeep.bookmark.pinn.entity.QPin.pin;
 
 @Service
 @RequiredArgsConstructor
@@ -224,7 +222,12 @@ public class FolderService {
 
             int followFlag = followRepository.countById_FromIdAndId_ToId(userId, foundUser.getId());
 
-                FolderResponseDTO responseDTO = FolderResponseDTO.builder()
+            List<Pin> foundPins = pinRepository.findAllByFolderId(folder.getId());
+
+            long count = foundPins.stream().filter(pin -> (folderRepository.getFolderUser(pin.getNewFolderId()).equals(userId)))
+                    .count();
+
+            FolderResponseDTO responseDTO = FolderResponseDTO.builder()
                         .id(folder.getId())
                         .userId(foundUser.getId())
                         .nickname(foundUser.getNickname())
@@ -232,7 +235,7 @@ public class FolderService {
                         .profileImage(foundUser.getProfileImage())
                         .title(folder.getTitle())
                         .pinCount(folder.getPins().size())
-                        .pinFlag(folder.isPinFlag())
+                        .pinFlag(count != 0 ? true : false)
                         .followFlag((userId == null) ? 0 : followFlag)
                         .build();
 
@@ -283,11 +286,15 @@ public class FolderService {
         //핀 생성
 //        pinRepository.save(Pin.builder().folder(folder).user(user).build());
 //        pinRepository.save(Pin.builder().folder(folder).newFolder(folderNew).build());
-        pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
+        Pin saved = pinRepository.save(Pin.builder().folder(folder).newFolderId(folderNew.getId()).build());
 
-        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
-                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
-                .exists();
+        boolean pinFlag = pinRepository.findById(saved.getId()).isPresent();
+//        BooleanExpression pinFlag = queryFactory.selectFrom(pin)
+//                .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
+//                .exists();
+
+
+        log.warn("pinFlag: {}", pinFlag);
 
         //Site 생성
         List<Site> sites = siteRepository.findByFolderId(folderId);
@@ -304,7 +311,7 @@ public class FolderService {
         FolderResponseDTO folderResponseDTO = new FolderResponseDTO(folderNew);
         folderResponseDTO.setNickname(user.getNickname());
         folderResponseDTO.setProfileImage(user.getProfileImage());
-        folderResponseDTO.setPinFlag(pinFlag == pinFlag.isTrue());
+        folderResponseDTO.setPinFlag(pinFlag);
      
         return folderResponseDTO;
     }

@@ -1,7 +1,6 @@
 package site.markeep.bookmark.user.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sun.jdi.InternalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +8,6 @@ import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -36,8 +34,6 @@ import site.markeep.bookmark.user.repository.UserRepository;
 import site.markeep.bookmark.user.repository.UserRepositoryImpl;
 
 import javax.persistence.EntityManager;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +70,7 @@ public class UserService {
     @Value("${kakao.client_secret}")
     private String KAKAO_CLIENT_SECRET;
 
-    @Value("${kakao.redirect_uri")
+    @Value("${kakao.redirect_uri}")
     private String KAKAO_REDIRECT_URI;
 
     @Value("${naver.client_id}")
@@ -83,7 +79,7 @@ public class UserService {
     @Value("${naver.client_secret}")
     private String NAVER_CLIENT_SECRET;
 
-    @Value("${naver.state")
+    @Value("${naver.state}")
     private String NAVER_STATE;
 
     @Value("${google.client_id}")
