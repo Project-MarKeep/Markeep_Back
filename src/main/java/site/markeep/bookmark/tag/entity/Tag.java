@@ -39,8 +39,8 @@ public class Tag {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
-//    @JsonBackReference
     @JsonIgnoreProperties("tags") // 순환 참조 방지
     private Folder folder;
 
 }
+//    @JsonBackReference

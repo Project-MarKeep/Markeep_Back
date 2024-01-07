@@ -31,6 +31,11 @@ public class FollowController {
         @AuthenticationPrincipal
         :
      */
+//        log.warn("tokenUserInfo의 id 값이 로그인 한 유저의 id 값아님?>?? : {}", id);
+//        log.warn("followFlag boolean타입: {}", followFlag.isTrue());
+//        log.warn("followFlag boolean타입: {}", followFlag.isFalse());
+//        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
+//        log.warn("쿼리 메서드 결과 : {}", followRelationship);
 
     @PostMapping
     public ResponseEntity<?> follow(
@@ -38,19 +43,14 @@ public class FollowController {
             Long toId
     ){
 
-        log.warn("[CONTROLLER] - follow");
-        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ userInfo : {}",userInfo);
-        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ toId : {}", toId);
+//        log.warn("[CONTROLLER] - follow");
+//        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ userInfo : {}",userInfo);
+//        log.warn("일단 요청 들어오는지 확인해볼개ㅐㅐ toId : {}", toId);
 
-//        log.warn("tokenUserInfo의 id 값이 로그인 한 유저의 id 값아님?>?? : {}", id);
 
         Follow followRes = queryFactory.selectFrom(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
                 .fetchOne();
-//        log.warn("followFlag boolean타입: {}", followFlag.isTrue());
-//        log.warn("followFlag boolean타입: {}", followFlag.isFalse());
-//        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
-//        log.warn("쿼리 메서드 결과 : {}", followRelationship);
 
         // 로그인 한 유저가 할 수 있는 행동이긴 하지만
         // 로그인 한 유저의 id값 = 똑같은 id값 -> 막기
@@ -75,5 +75,4 @@ public class FollowController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
-
 }

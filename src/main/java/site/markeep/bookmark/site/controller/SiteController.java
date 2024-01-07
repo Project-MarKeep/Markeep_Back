@@ -41,7 +41,6 @@ public class SiteController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-//        log.warn("사이트가 등록되는게 맞나 볼게: {}", sites);
     }
 
     // 사이트 목록 조회
@@ -57,10 +56,10 @@ public class SiteController {
         }
     }
 
+//        log.warn("[CONTROLLER] updateRegistSiteInfo메서드에 들어온건 마자여???????");
     // 사이트 등록 정보 수정 (기존의 값 입력되어 있어야 함)
     @PatchMapping
     public ResponseEntity<?> updateRegistSiteInfo(@RequestBody UpdateSiteInfoRequestDTO dto){
-//        log.warn("[CONTROLLER] updateRegistSiteInfo메서드에 들어온건 마자여???????");
         try {
             siteService.updateRegistSiteInfo(dto);
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -89,7 +88,6 @@ public class SiteController {
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody SiteDeleteRequestDTO dto
     ) {
-
         try {
             siteService.deleteSite(userInfo.getId(), dto);
             return ResponseEntity.ok().body("사이트가 정상적으로 삭제되었습니다.");
@@ -98,5 +96,4 @@ public class SiteController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

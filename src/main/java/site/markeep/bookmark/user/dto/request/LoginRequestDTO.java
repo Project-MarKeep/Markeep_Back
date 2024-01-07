@@ -21,9 +21,6 @@ public class LoginRequestDTO {
     private String password;
 
     @NotBlank
-    private Role role;
-
-    @NotBlank
     private boolean autoLogin;
 
 }

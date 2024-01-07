@@ -37,9 +37,10 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeRequests() // 요청 선언해서 인증/인가 검사 할건지 안할건지
                     .antMatchers(HttpMethod.GET, "/folders/all").permitAll()
-                    .antMatchers("/folders/**").authenticated()
-                    .antMatchers("/site","/user/profile","/user/nickname").authenticated()
-                    .antMatchers("/user/**").permitAll();
+                    .antMatchers("/user/**").permitAll()
+//                    .antMatchers("/folders/**").authenticated()
+//                    .antMatchers("/site","/user/profile","/user/nickname").hasAnyAuthority("USER")
+                    .anyRequest().authenticated();
         // 세션을 사용하지 않겠다! 설정
         // 사용하지 않으니 스프링 시큐리티가 세션을 사용하지 않고 존재해도 사용하지 않겠다고 설정!
 

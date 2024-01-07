@@ -15,10 +15,12 @@ import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import static site.markeep.bookmark.folder.entity.QFolder.folder;
 import static site.markeep.bookmark.follow.entity.QFollow.follow;
+////        log.warn("[SERVICE] - saved 된 내용 좀 보까 ㅋㅋ; : {}", saved);
 
 @Service
 @Slf4j
@@ -28,6 +30,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final FolderRepository folderRepository;
+    private final UserRepository userRepository;
     private final JPAQueryFactory queryFactory;
 
     public void follow(TokenUserInfo userInfo, Long toId) {
@@ -43,13 +46,15 @@ public class FollowService {
                         )
                         .build()
         );
-        Folder foundFolder = folderRepository.findById(userInfo.getId())
-                .orElseThrow(() -> new RuntimeException());
-//        queryFactory.update(folder)
-//                .where(folder.id.eq(userInfo.getId()))
-//                .set()
-//        log.warn("[SERVICE] - saved 된 내용 좀 보까 ㅋㅋ; : {}", saved);
+
+        User toIdInfo = userRepository.findById(toId).orElseThrow(() -> new RuntimeException());
+        List<Folder> folders = toIdInfo.getFolders();
+        for (Folder f : folders){
+            f.setFollowFlag(1);
+            folderRepository.save(f);
+        }
     }
+
     /*
         1. 긍까 먼저 userInfo.getId()랑 toId가 followRepository.findbyId()했 -> 안해
         2. 생각해보니 queryFactory로 셀렉하면댐 해오겟음
@@ -58,19 +63,17 @@ public class FollowService {
      */
     public void deleteFollow(TokenUserInfo userInfo, Long toId) {
 
-        long execute = queryFactory.delete(follow)
+        // 팔로 정보 삭제
+        queryFactory.delete(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
                 .execute();
-        log.warn("delete 결과 -> {}",execute);
 
-        // 팔로 정보 삭제
-//        followRepository.
-//                .build())
-//                .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
-//                .execute();
-//        log.warn("팔로 정보 삭제 -> {}",deleteFollowInfo);
-//        Follow followRelationship = followRepository.findFollowRelationship(userInfo.getId(), toId);
-//        log.warn("쿼리 메서드 결과 : {}", followRelationship);
-
+        User toIdInfo = userRepository.findById(toId).orElseThrow(() -> new RuntimeException());
+        List<Folder> folders = toIdInfo.getFolders();
+        for (Folder f : folders){
+            f.setFollowFlag(0);
+            folderRepository.save(f);
+        }
     }
 }
+

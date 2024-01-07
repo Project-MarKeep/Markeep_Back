@@ -42,8 +42,6 @@ public class SiteService {
                 () -> new RuntimeException("없는 폴더입니다. 먼저 폴더를 생성해주세요!")
         );
 
-        log.warn("foundFolder ->");
-
         siteRepository.save(Site.builder()
                 .siteName(dto.getSiteName())
                 .url(dto.getUrl())
@@ -52,10 +50,6 @@ public class SiteService {
                 .build());
     }
 
-    // folderId로 사이트 목록 조회
-    public List<SiteResponseDTO> getSiteList(Long folderId) {
-        log.warn("folderId -> {}", folderId);
-        List<Site> siteList = siteRepository.findByFolderId(folderId);
 //        List<Site> siteList = queryFactory.selectFrom(site)
 //                .where(site.folder.id.eq(folderId))
 //                .fetch();
@@ -63,6 +57,10 @@ public class SiteService {
 //                .orElseThrow(
 //                        () -> new RuntimeException("폴더에 등록 된 사이트가 없습니다!")
 //                ).getSites();
+    // folderId로 사이트 목록 조회
+    public List<SiteResponseDTO> getSiteList(Long folderId) {
+        log.warn("folderId -> {}", folderId);
+        List<Site> siteList = siteRepository.findByFolderId(folderId);
         log.warn("=================siteList : {}", siteList);
         List<SiteResponseDTO> responseDTOList = siteList.stream()
                 .map(site -> new SiteResponseDTO(site))
@@ -70,7 +68,6 @@ public class SiteService {
         log.warn("=================responseDTOList : {}", responseDTOList);
         return responseDTOList;
     }
-
 
     public void deleteSite(Long userId, SiteDeleteRequestDTO dto) {
         folderRepository.findById(dto.getFolderId()).orElseThrow(
@@ -87,16 +84,14 @@ public class SiteService {
         } catch (Exception e) {
             throw new RuntimeException("site id가 존재하지 않아 site 삭제에 실패했습니다.");
         }
-
     }
-
-    public void updateRegistSiteInfo(UpdateSiteInfoRequestDTO dto) {
 //        log.warn("[SERVICE] updateRegistSiteInfo에 들어온건 맞니ㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ");
 //        log.warn("아니면 dto에서 값 꺼내는건 괜찮나? -> {}",dto.getUserId());
         // 기존의 정보를 입력 되어 있게 해주기 위해서 기존 정보 선언
-        Site foundSite = siteRepository.findById(dto.getSiteId()).orElseThrow();
 //        log.warn("siteName 오나 보자 : {}", site.getSiteName());
 //        log.warn("comment 오나 보자 : {}", site.getComment());
+    public void updateRegistSiteInfo(UpdateSiteInfoRequestDTO dto) {
+        Site foundSite = siteRepository.findById(dto.getSiteId()).orElseThrow();
 
         // udpate시켜주기
         if(dto.getComment() == null) {
