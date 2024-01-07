@@ -205,7 +205,6 @@ public class UserController {
 
     }
 
-
     //닉네임 수정
     @PutMapping("/nickname")
     public ResponseEntity<?> modifyNickname(

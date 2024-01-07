@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.DeleteIdsRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
@@ -52,21 +53,19 @@ public class FolderController {
         return ResponseEntity.ok().body(responseDTO);
     }
 
-
     // 폴더 정보 업데이트 시켜주는 메서드
     @PutMapping(value = "/my")
     public ResponseEntity<?> update(
             @AuthenticationPrincipal TokenUserInfo userInfo,
             @RequestBody FolderUpdateRequestDTO dto
     ){
-        log.info("/folders/my - PATCH 요청!!!!!!!!!!!!!!! - {}", dto);
+        log.info("/folders/my - PUT 요청!!!!!!!!!!!!!!! - {}", dto);
         try {
             List<MyFolderResponseDTO> updatedList = folderService.update(dto,userInfo.getId());
             return  ResponseEntity.ok().body(updatedList);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
 
     //폴더 삭제 요청
@@ -81,6 +80,20 @@ public class FolderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
         
+    }
+
+    @DeleteMapping("/my/ids")
+    public ResponseEntity<?> deleteIds(
+            @AuthenticationPrincipal TokenUserInfo userInfo,
+            @RequestBody DeleteIdsRequestDTO dto
+            ){
+        try {
+            folderService.deleteIds(userInfo, dto);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
     
     /*****************************************************

@@ -11,8 +11,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.aws.S3Service;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.DeleteIdsRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
@@ -257,7 +259,7 @@ public class FolderService {
     public FolderResponseDTO addFolderPin(Long userId, Long folderId) throws Exception {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(
-                        () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요 ")
+                        () -> new RuntimeException("잘못된 폴더 번호 입니다. 확인해주세요")
                 );
 
         User user = getUser(userId);
@@ -290,7 +292,9 @@ public class FolderService {
 //                .where()
         BooleanExpression pinFlag = queryFactory.selectFrom(pin)
                 .where(pin.newFolderId.eq(folderNew.getId()).and(pin.folder.id.eq(folderId)))
-                .exists();
+                .exists().isTrue();
+
+
 
 
         //닉 네임
@@ -363,4 +367,10 @@ public class FolderService {
         return extension;
     }
 
+    public void deleteIds(TokenUserInfo userInfo, DeleteIdsRequestDTO dto) {
+
+        for(Long id : dto.getIds()){
+            folderRepository.deleteById(id);
+        }
+    }
 }

@@ -36,6 +36,7 @@ public class Pin {
     @Column(nullable = false)
     private Long newFolderId;
 
+}
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "new_folder_id")
 //    @JsonBackReference
@@ -55,4 +56,3 @@ public class Pin {
 //    }
 
 
-}

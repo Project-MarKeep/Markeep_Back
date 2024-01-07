@@ -81,9 +81,6 @@ public class TokenProvider {
         // 1. 토큰 만료 시간 설정하기
         Date expiry = Date.from(Instant.now().plus(REFRESH_EXPIRY, ChronoUnit.HOURS));
 
-        // 기존의 클레임 말고 추가로 더 받아야 하는 값 (= 유저의 이메일 값)
-//        Map<String, String> claims = new HashMap<>();
-
         // 토큰 생성 동시에 리턴
         return Jwts.builder()
                 .signWith(

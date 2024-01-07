@@ -45,6 +45,8 @@ public class Folder {
 
     private String folderImg;
 
+    private int followFlag;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     @JsonBackReference
@@ -78,7 +80,8 @@ public class Folder {
             tag.setFolder(this);
         }
     }
-    
+}
+
 //    public void update(FolderUpdateRequestDTO dto){
 //        this.title = dto.getTitle();
 //        this.hideFlag = dto.isHideFlag();
@@ -104,4 +107,3 @@ public class Folder {
 //        }
 //    }
 
-}
