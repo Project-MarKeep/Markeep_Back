@@ -10,8 +10,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import site.markeep.bookmark.auth.TokenUserInfo;
 import site.markeep.bookmark.aws.S3Service;
 import site.markeep.bookmark.folder.dto.request.AddFolderRequestDTO;
+import site.markeep.bookmark.folder.dto.request.DeleteIdsRequestDTO;
 import site.markeep.bookmark.folder.dto.request.FolderUpdateRequestDTO;
 import site.markeep.bookmark.folder.dto.response.FolderListResponseDTO;
 import site.markeep.bookmark.folder.dto.response.FolderResponseDTO;
@@ -364,4 +366,10 @@ public class FolderService {
         return extension;
     }
 
+    public void deleteIds(TokenUserInfo userInfo, DeleteIdsRequestDTO dto) {
+
+        for(Long id : dto.getIds()){
+            folderRepository.deleteById(id);
+        }
+    }
 }

@@ -45,8 +45,7 @@ public class Folder {
 
     private String folderImg;
 
-    @ColumnDefault("false")
-    private boolean pinFlag;
+    private int followFlag;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
@@ -78,7 +77,8 @@ public class Folder {
             tag.setFolder(this);
         }
     }
-    
+}
+
 //    public void update(FolderUpdateRequestDTO dto){
 //        this.title = dto.getTitle();
 //        this.hideFlag = dto.isHideFlag();
@@ -104,4 +104,3 @@ public class Folder {
 //        }
 //    }
 
-}

@@ -17,7 +17,6 @@ public class MyFolderResponseDTO {
     private boolean hideFlag;
     private int pinCount;
 
-
     public MyFolderResponseDTO(Folder folder) {
         this.id = folder.getId();
         this.title = folder.getTitle();

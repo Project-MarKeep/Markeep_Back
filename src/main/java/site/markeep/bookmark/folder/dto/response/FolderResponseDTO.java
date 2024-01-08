@@ -36,7 +36,6 @@ public class FolderResponseDTO {
         this.folderImg = folder.getFolderImg();
         this.profileImage = folder.getUser().getProfileImage();
         this.hideFlag = folder.isHideFlag();
-        this.pinFlag = folder.isPinFlag();
         this.pinCount = folder.getPins().size();
         this.tagNames = folder.getTags().stream()
                 .map(Tag::getTagName)

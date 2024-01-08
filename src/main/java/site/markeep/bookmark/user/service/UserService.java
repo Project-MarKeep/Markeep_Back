@@ -126,8 +126,6 @@ public class UserService {
         log.info("리프레시 토큰 : {}", refreshToken);
         log.info("리프레시 토큰 생성 됨");
 
-
-
         if(dto.isAutoLogin()){
             // 이거는 이메일 & 비밀번호 둘 다 일치한 경우 화면단으로 보내는 유저의 정보
             userRefreshTokenRepository.findById(user.getId())
@@ -421,7 +419,6 @@ public class UserService {
             profileResponseDTO.setFollowerCount(followRepository.countByid_ToId(user.get().getId()));
             profileResponseDTO.setFollowingCount(followRepository.countByid_FromId(user.get().getId()));
             profileResponseDTO.setProfileImage(user.get().getProfileImage());
-//            loadFile(profileResponseDTO , user.get().getProfileImage());
 
             return profileResponseDTO;
         } else {

@@ -41,8 +41,8 @@ public class FolderRepositoryImpl implements FolderRepositoryCustom{
                 .where(predicate)
                 .groupBy(folder)
                 .orderBy(folder.pins.size().desc(), folder.createDate.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
                 .fetch();
 
         long total = queryFactory.selectFrom(folder)

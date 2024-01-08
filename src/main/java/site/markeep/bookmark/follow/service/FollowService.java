@@ -15,10 +15,12 @@ import site.markeep.bookmark.follow.repository.FollowRepository;
 import site.markeep.bookmark.user.entity.User;
 import site.markeep.bookmark.user.repository.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import static site.markeep.bookmark.folder.entity.QFolder.folder;
 import static site.markeep.bookmark.follow.entity.QFollow.follow;
+////        log.warn("[SERVICE] - saved 된 내용 좀 보까 ㅋㅋ; : {}", saved);
 
 @Service
 @Slf4j
@@ -28,6 +30,7 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final FolderRepository folderRepository;
+    private final UserRepository userRepository;
     private final JPAQueryFactory queryFactory;
 
     public void follow(TokenUserInfo userInfo, Long toId) {
@@ -43,6 +46,13 @@ public class FollowService {
                         )
                         .build()
         );
+
+        User toIdInfo = userRepository.findById(toId).orElseThrow(() -> new RuntimeException());
+        List<Folder> folders = toIdInfo.getFolders();
+        for (Folder f : folders){
+            f.setFollowFlag(1);
+            folderRepository.save(f);
+        }
     }
 
     /*
@@ -57,5 +67,13 @@ public class FollowService {
         queryFactory.delete(follow)
                 .where(follow.id.fromId.eq(userInfo.getId()).and(follow.id.toId.eq(toId)))
                 .execute();
+
+        User toIdInfo = userRepository.findById(toId).orElseThrow(() -> new RuntimeException());
+        List<Folder> folders = toIdInfo.getFolders();
+        for (Folder f : folders){
+            f.setFollowFlag(0);
+            folderRepository.save(f);
+        }
     }
 }
+
