@@ -161,6 +161,7 @@ public class UserService {
         dto.setPassword(encodedPassword);
 
         User saved = userRepository.save(dto.toEntity(dto));
+        create(saved.getId(), "https://markeep-img.s3.ap-northeast-2.amazonaws.com/%EA%B8%B0%EB%B3%B8+%EC%9D%B4%EB%AF%B8%EC%A7%80/42c4f9195e8ffab0c0c449b0d58f64c0.jpg");
         folderRepository.save(
                 Folder.builder()
                     .user(saved)

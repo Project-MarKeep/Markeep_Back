@@ -10,14 +10,14 @@ import site.markeep.bookmark.folder.entity.Folder;
 @ToString
 public class PageResponseDTO {
 
-    private int startPage;
-    private int endPage;
-    private int currentPage;
+    private int startPage; //시작 페이지
+    private int endPage; // 끝 페이지
+    private int currentPage; // 현재 페이지
 
-    private boolean prev;
-    private boolean next;
+    private boolean prev; // 이전 버튼
+    private boolean next; // 이후 버튼
 
-    private int totalCount;
+    private int totalCount; // 총 게시물 수
 
     // 한 페이지에 배치할 페이지 버튼 수 (1 ~ 10 // 11 ~ 20)
     private static final int PAGE_COUNT = 10;
